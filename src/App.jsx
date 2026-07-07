@@ -154,7 +154,18 @@ function playerRoundResult(player, round, courses, scores, playerHcp) {
     return pts == null ? sum : sum + pts
   }, 0)
   const adj = points > 0 ? Math.round(points * (113 / (course.slope || 113)) * 10) / 10 : 0
-  return { player, course, played, strokes, points, adj, playing, hcp, holeScores }
+  const net = strokes > 0 ? Math.round((strokes - playing) * 10) / 10 : 0
+  const grossToPar = strokes > 0 ? strokes - (course.par || 72) : 0
+  const netToPar = net > 0 ? Math.round((net - (course.par || 72)) * 10) / 10 : 0
+  const holeBreakdown = holeScores.map((st, i) => {
+    const par = holes[i]?.par || 4
+    const si = holes[i]?.si || i + 1
+    const n = Number(st)
+    const pts = calcStableford(st, par, si, playing)
+    const diff = st !== '' && n > 0 ? n - par : null
+    return { hole:i+1, strokes: st, par, si, pts, diff }
+  })
+  return { player, course, played, strokes, points, adj, net, grossToPar, netToPar, playing, hcp, holeScores, holeBreakdown }
 }
 
 function leaderboard(players, rounds, courses, scores, playerHcp) {
@@ -394,9 +405,66 @@ function Players({players, board, playerHcp, updateHcp, admin}) {
 }
 
 function Stats({board, rounds, players, courses, scores, playerHcp}) {
-  const bestRound = board.flatMap(p => p.best.map(r => ({...r, player:p.player}))).sort((a,b)=>b.adj-a.adj)[0]
-  const totalPlayed = players.reduce((sum,p)=> sum + rounds.filter(r => playerRoundResult(p,r,courses,scores,playerHcp).played > 0).length,0)
-  return <section className="homeGrid"><Metric title="Registrerade rundor" value={totalPlayed} text="Totalt i systemet"/><Metric title="Bästa runda" value={bestRound ? `${bestRound.adj}p` : '—'} text={bestRound?.player || 'Ingen data än'}/><Metric title="Ledare" value={board[0]?.total || 0} text={board[0]?.player || 'Ingen data'}/><div className="panel wide"><h2>Formtabell</h2>{board.slice(0,8).map(p => <div className="leaderRow" key={p.player}><div><b>{p.player}</b><small>{p.best.map(r=>r.adj).join(' · ') || 'Inga rundor'}</small></div><strong>{p.total}p</strong></div>)}</div></section>
+  const [mode, setMode] = useState('overview')
+  const allRounds = players.flatMap(player => rounds.map(round => playerRoundResult(player, round, courses, scores, playerHcp)).filter(r => r.played > 0).map(r => ({...r, player})))
+  const bestPoints = [...allRounds].sort((a,b)=>b.adj-a.adj)[0]
+  const bestNet = [...allRounds].filter(r=>r.net>0).sort((a,b)=>a.net-b.net)[0]
+  const bestGross = [...allRounds].filter(r=>r.strokes>0).sort((a,b)=>a.strokes-b.strokes)[0]
+  const holes = allRounds.flatMap(r => r.holeBreakdown.filter(h => h.diff !== null).map(h => ({...h, player:r.player, course:r.course.name})))
+  const birdies = holes.filter(h => h.diff === -1).length
+  const eagles = holes.filter(h => h.diff <= -2).length
+  const pars = holes.filter(h => h.diff === 0).length
+  const bogeys = holes.filter(h => h.diff === 1).length
+  const doubles = holes.filter(h => h.diff >= 2).length
+  const perPlayer = players.map(player => {
+    const pr = allRounds.filter(r => r.player === player)
+    const ph = holes.filter(h => h.player === player)
+    const avgPts = pr.length ? Math.round(pr.reduce((s,r)=>s+r.points,0)/pr.length*10)/10 : 0
+    const avgNet = pr.filter(r=>r.net).length ? Math.round(pr.filter(r=>r.net).reduce((s,r)=>s+r.net,0)/pr.filter(r=>r.net).length*10)/10 : 0
+    return {
+      player,
+      rounds: pr.length,
+      points: pr.reduce((s,r)=>s+r.points,0),
+      avgPts,
+      avgNet,
+      gross: pr.reduce((s,r)=>s+r.strokes,0),
+      birdies: ph.filter(h=>h.diff===-1).length,
+      eagles: ph.filter(h=>h.diff<=-2).length,
+      pars: ph.filter(h=>h.diff===0).length,
+      bogeys: ph.filter(h=>h.diff===1).length,
+      doubles: ph.filter(h=>h.diff>=2).length,
+    }
+  }).sort((a,b)=>b.avgPts-a.avgPts || b.points-a.points)
+  const hardest = Array.from({length:18}, (_,i) => {
+    const hs = holes.filter(h => h.hole === i+1)
+    const avgPts = hs.length ? hs.reduce((s,h)=>s+(h.pts ?? 0),0)/hs.length : 0
+    const avgDiff = hs.length ? hs.reduce((s,h)=>s+(h.diff ?? 0),0)/hs.length : 0
+    return {hole:i+1, played:hs.length, avgPts:Math.round(avgPts*10)/10, avgDiff:Math.round(avgDiff*10)/10}
+  }).filter(h=>h.played).sort((a,b)=>a.avgPts-b.avgPts)
+  const tabs = [['overview','Översikt'],['players','Spelare'],['records','Rekord'],['holes','Hål']]
+  return <section className="statsPage">
+    <div className="sectionHead"><h2>Statistikmotor</h2><span>Poäng · nettoslag · bruttoslag · håldata</span></div>
+    <div className="statTabs">{tabs.map(([id,label]) => <button key={id} className={mode===id?'active':''} onClick={()=>setMode(id)}>{label}</button>)}</div>
+
+    {mode === 'overview' && <div className="homeGrid">
+      <Metric title="Registrerade rundor" value={allRounds.length} text="Totalt i systemet" />
+      <Metric title="Bästa poängrunda" value={bestPoints ? `${bestPoints.adj}p` : '—'} text={bestPoints?.player || 'Ingen data'} />
+      <Metric title="Bästa nettoslag" value={bestNet ? bestNet.net : '—'} text={bestNet?.player || 'Ingen data'} />
+      <Metric title="Bästa bruttoslag" value={bestGross ? bestGross.strokes : '—'} text={bestGross?.player || 'Ingen data'} />
+      <div className="panel wide statBreakdown"><h3>Hålfördelning</h3><div className="breakGrid"><span>🦅 Eagles <b>{eagles}</b></span><span>🐦 Birdies <b>{birdies}</b></span><span>✅ Par <b>{pars}</b></span><span>☝️ Bogeys <b>{bogeys}</b></span><span>✌️ Dubbel+ <b>{doubles}</b></span></div></div>
+    </div>}
+
+    {mode === 'players' && <div className="panel"><h3>Spelarstatistik</h3><div className="statTable"><div className="statTableHead"><span>Spelare</span><span>R</span><span>Snitt p</span><span>Snitt netto</span><span>Birdies</span><span>Par</span></div>{perPlayer.map(p => <div className="statTableRow" key={p.player}><b>{p.player}</b><span>{p.rounds}</span><span>{p.avgPts}</span><span>{p.avgNet || '—'}</span><span>{p.birdies + p.eagles}</span><span>{p.pars}</span></div>)}</div></div>}
+
+    {mode === 'records' && <div className="cards">
+      <article className="recordCard"><small>Bästa poäng</small><b>{bestPoints ? `${bestPoints.adj}p` : '—'}</b><span>{bestPoints?.player}</span><em>{bestPoints?.course?.name}</em></article>
+      <article className="recordCard"><small>Bästa nettoslag</small><b>{bestNet ? bestNet.net : '—'}</b><span>{bestNet?.player}</span><em>{bestNet?.course?.name}</em></article>
+      <article className="recordCard"><small>Bästa bruttoslag</small><b>{bestGross ? bestGross.strokes : '—'}</b><span>{bestGross?.player}</span><em>{bestGross?.course?.name}</em></article>
+      <article className="recordCard"><small>Flest birdies/eagles</small><b>{perPlayer[0]?.birdies + perPlayer[0]?.eagles || 0}</b><span>{perPlayer[0]?.player}</span><em>Säsong totalt</em></article>
+    </div>}
+
+    {mode === 'holes' && <div className="panel"><h3>Svåraste hålen</h3>{hardest.slice(0,18).map(h => <div className="leaderRow" key={h.hole}><div><b>Hål {h.hole}</b><small>{h.played} registrerade scorer</small></div><strong>{h.avgPts}p</strong><span className="muted">{h.avgDiff > 0 ? '+' : ''}{h.avgDiff} mot par</span></div>)}</div>}
+  </section>
 }
 
 function Chat({players, identity}) {

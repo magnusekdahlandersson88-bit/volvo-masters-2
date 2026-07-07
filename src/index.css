@@ -143,3 +143,29 @@ option { color: #071009; }
   .miniHoles { grid-template-columns: repeat(6,1fr); }
   .holeCommander { min-height: auto; }
 }
+
+
+/* Volvo Masters 2.3 statistics */
+.statsPage { display: grid; gap: 18px; }
+.statTabs { display:flex; gap:10px; flex-wrap:wrap; }
+.statTabs button { border:1px solid rgba(201,168,76,.24); background:rgba(255,255,255,.05); color:var(--text); border-radius:999px; padding:10px 14px; font-weight:800; }
+.statTabs button.active { background:linear-gradient(135deg,var(--gold),#9a762a); color:#08110b; box-shadow:0 12px 30px rgba(201,168,76,.18); }
+.statBreakdown h3 { margin-top:0; }
+.breakGrid { display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; }
+.breakGrid span { background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:16px; color:var(--muted); display:flex; flex-direction:column; gap:7px; }
+.breakGrid b { color:var(--gold); font-size:28px; }
+.statTable { display:grid; gap:8px; overflow:auto; }
+.statTableHead,.statTableRow { display:grid; grid-template-columns: 1.8fr .4fr .7fr .8fr .7fr .5fr; gap:10px; align-items:center; min-width:720px; padding:12px 14px; border-radius:16px; }
+.statTableHead { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+.statTableRow { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); }
+.statTableRow b { color:var(--text); }
+.recordCard { background:linear-gradient(180deg,rgba(201,168,76,.13),rgba(255,255,255,.05)); border:1px solid rgba(201,168,76,.22); border-radius:24px; padding:22px; display:grid; gap:8px; min-height:150px; }
+.recordCard small { color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-weight:800; }
+.recordCard b { color:var(--gold); font-size:38px; }
+.recordCard span { font-weight:900; }
+.recordCard em { color:var(--muted); font-style:normal; }
+.muted { color:var(--muted); font-size:12px; }
+@media (max-width: 760px) {
+  .breakGrid { grid-template-columns: 1fr 1fr; }
+  .statTable { margin-inline:-8px; }
+}
