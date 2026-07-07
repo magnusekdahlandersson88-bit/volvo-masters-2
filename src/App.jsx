@@ -542,4 +542,3 @@ function Gallery({gallery, rounds, courses}) {
 }
 
 export default App
-

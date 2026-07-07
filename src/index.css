@@ -169,3 +169,37 @@ option { color: #071009; }
   .breakGrid { grid-template-columns: 1fr 1fr; }
   .statTable { margin-inline:-8px; }
 }
+
+
+/* Volvo Masters 2.4 */
+.playersPro { display:grid; gap:18px; }
+.playerHero { display:flex; align-items:center; gap:18px; }
+.bigAvatar { width:86px; height:86px; border-radius:28px; display:grid; place-items:center; font-size:28px; font-weight:900; color:#08120b; background:linear-gradient(135deg,#f4d36e,#a9842f); box-shadow:0 18px 44px rgba(201,168,76,.22); }
+.hcpEditor { margin-left:auto; display:grid; gap:6px; color:var(--muted); font-size:12px; }
+.hcpEditor input { width:90px; }
+.profileGrid { display:grid; grid-template-columns:320px 1fr; gap:18px; }
+.playerList { display:grid; gap:8px; align-content:start; }
+.playerList button { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); color:var(--text); cursor:pointer; }
+.playerList button.active { border-color:rgba(201,168,76,.65); background:rgba(201,168,76,.16); }
+.profileStats { display:grid; gap:16px; }
+.stats.four { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.roundHistory { display:grid; gap:10px; }
+.roundHistory div { display:grid; grid-template-columns:1fr auto auto; gap:12px; align-items:center; padding:12px 0; border-top:1px solid rgba(255,255,255,.08); }
+.roundHistory b { color:var(--gold); }
+.podiumStage { display:grid; grid-template-columns:1fr 1.2fr 1fr; align-items:end; gap:14px; margin:18px 0; }
+.podiumBlock { min-height:140px; border-radius:28px; display:grid; place-items:center; padding:18px; background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03)); border:1px solid rgba(201,168,76,.22); text-align:center; }
+.podiumBlock.place1 { min-height:190px; background:linear-gradient(180deg,rgba(201,168,76,.28),rgba(255,255,255,.04)); }
+.podiumBlock span { font-size:34px; }
+.podiumBlock strong { color:var(--gold); font-size:24px; }
+.leaderRow.enhanced { transition:transform .18s ease, background .18s ease; }
+.leaderRow.enhanced:hover { transform:translateY(-2px); background:rgba(255,255,255,.035); }
+@media (max-width: 860px) {
+  .playerHero { align-items:flex-start; flex-direction:column; }
+  .hcpEditor { margin-left:0; width:100%; }
+  .hcpEditor input { width:100%; }
+  .profileGrid { grid-template-columns:1fr; }
+  .stats.four { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .roundHistory div { grid-template-columns:1fr; gap:4px; }
+  .podiumStage { grid-template-columns:1fr; }
+  .podiumBlock, .podiumBlock.place1 { min-height:110px; }
+}
