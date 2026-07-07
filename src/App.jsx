@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { initializeApp } from 'firebase/app'
 import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, query, orderBy } from 'firebase/firestore'
+import './index.css'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBx8lrLzDWoYAonfiWMvOIpkkDqOo2LC88',
@@ -15,12 +16,15 @@ const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 
 const ADMIN_PASSWORD = '340426'
-const GOLD = '#d6b35f'
 const DEFAULT_PAR = [4,3,5,4,4,3,5,4,4,4,3,5,4,4,3,5,4,4]
 const DEFAULT_SI = [1,13,5,11,3,15,7,17,9,2,14,6,12,4,16,8,18,10]
 const makeHoles = () => DEFAULT_PAR.map((par, i) => ({ par, si: DEFAULT_SI[i] }))
 
-const DEFAULT_PLAYERS = ['Jonas Ottosson','Henrik Bergman','Magnus Ekdahl','Viktor Eriksson','Conny Pettersson','Per Nilsson','Hugo Ottosson','Simon Rydgren','Philip Lecaros','Mattias Svensson','Jonatan Fagerström','Erik Skaremyr']
+const DEFAULT_PLAYERS = [
+  'Jonas Ottosson','Henrik Bergman','Magnus Ekdahl','Viktor Eriksson','Conny Pettersson','Per Nilsson',
+  'Hugo Ottosson','Simon Rydgren','Philip Lecaros','Mattias Svensson','Jonatan Fagerström','Erik Skaremyr'
+]
+
 const DEFAULT_COURSES = [
   { id:1, name:'Breviken GK', tee:'Gul', location:'Karlsborg', par:72, cr:71.4, slope:136, emoji:'🏨', holes:makeHoles() },
   { id:2, name:'Billingen GK', tee:'53', location:'Skövde', par:70, cr:69.3, slope:132, emoji:'⛰️', holes:makeHoles() },
@@ -29,23 +33,51 @@ const DEFAULT_COURSES = [
   { id:5, name:'Mariestad GK', tee:'57', location:'Mariestad', par:73, cr:71.9, slope:134, emoji:'🌊', holes:makeHoles() },
   { id:6, name:'Läckö GK', tee:'Gul', location:'Lidköping', par:72, cr:71.6, slope:138, emoji:'🏯', holes:makeHoles() }
 ]
+
 const DEFAULT_ROUNDS = [
-  { slot:1, courseId:1, date:'14 maj 2026', teeTimes:{1:'',2:'',3:''}, groups:[{id:1,name:'Fyrboll 1',players:['Magnus Ekdahl','Simon Rydgren','Hugo Ottosson','Jonatan Fagerström']},{id:2,name:'Fyrboll 2',players:['Viktor Eriksson','Philip Lecaros','Mattias Svensson','Erik Skaremyr']},{id:3,name:'Treboll',players:['Per Nilsson','Jonas Ottosson','Conny Pettersson']}]},
-  { slot:2, courseId:2, date:'29 maj 2026', teeTimes:{1:'',2:'',3:''}, groups:[{id:1,name:'Treboll',players:['Henrik Bergman','Conny Pettersson','Mattias Svensson']},{id:2,name:'Fyrboll 1',players:['Jonas Ottosson','Per Nilsson','Magnus Ekdahl','Simon Rydgren']},{id:3,name:'Fyrboll 2',players:['Hugo Ottosson','Erik Skaremyr','Jonatan Fagerström','Philip Lecaros']}]},
-  { slot:3, courseId:5, date:'21 jun 2026', teeTimes:{1:'',2:'',3:''}, groups:[{id:1,name:'Fyrboll 1',players:['Per Nilsson','Mattias Svensson','Erik Skaremyr','Simon Rydgren']},{id:2,name:'Treboll',players:['Conny Pettersson','Hugo Ottosson','Philip Lecaros']},{id:3,name:'Fyrboll 2',players:['Henrik Bergman','Viktor Eriksson','Jonas Ottosson','Magnus Ekdahl']}]},
-  { slot:4, courseId:3, date:'3 jul 2026', teeTimes:{1:'',2:'',3:''}, groups:[{id:1,name:'Fyrboll 1',players:['Henrik Bergman','Conny Pettersson','Magnus Ekdahl','Philip Lecaros']},{id:2,name:'Fyrboll 2',players:['Simon Rydgren','Jonas Ottosson','Jonatan Fagerström','Hugo Ottosson']},{id:3,name:'Treboll',players:['Viktor Eriksson','Per Nilsson','Erik Skaremyr']}]},
-  { slot:5, courseId:4, date:'', teeTimes:{1:'',2:'',3:''}, groups:null },
+  { slot:1, courseId:1, date:'14 maj 2026', teeTimes:{1:'',2:'',3:''}, groups:[
+    {id:1,name:'Fyrboll 1',players:['Magnus Ekdahl','Simon Rydgren','Hugo Ottosson','Jonatan Fagerström']},
+    {id:2,name:'Fyrboll 2',players:['Viktor Eriksson','Philip Lecaros','Mattias Svensson','Erik Skaremyr']},
+    {id:3,name:'Treboll',players:['Per Nilsson','Jonas Ottosson','Conny Pettersson']}
+  ]},
+  { slot:2, courseId:2, date:'29 maj 2026', teeTimes:{1:'',2:'',3:''}, groups:[
+    {id:1,name:'Treboll',players:['Henrik Bergman','Conny Pettersson','Mattias Svensson']},
+    {id:2,name:'Fyrboll 1',players:['Jonas Ottosson','Per Nilsson','Magnus Ekdahl','Simon Rydgren']},
+    {id:3,name:'Fyrboll 2',players:['Hugo Ottosson','Erik Skaremyr','Jonatan Fagerström','Philip Lecaros']}
+  ]},
+  { slot:3, courseId:5, date:'21 jun 2026', teeTimes:{1:'',2:'',3:''}, groups:[
+    {id:1,name:'Fyrboll 1',players:['Per Nilsson','Mattias Svensson','Erik Skaremyr','Simon Rydgren']},
+    {id:2,name:'Treboll',players:['Conny Pettersson','Hugo Ottosson','Philip Lecaros']},
+    {id:3,name:'Fyrboll 2',players:['Henrik Bergman','Viktor Eriksson','Jonas Ottosson','Magnus Ekdahl']}
+  ]},
+  { slot:4, courseId:3, date:'3 jul 2026', teeTimes:{1:'',2:'',3:''}, groups:[
+    {id:1,name:'Fyrboll 1',players:['Henrik Bergman','Conny Pettersson','Magnus Ekdahl','Philip Lecaros']},
+    {id:2,name:'Fyrboll 2',players:['Simon Rydgren','Jonas Ottosson','Jonatan Fagerström','Hugo Ottosson']},
+    {id:3,name:'Treboll',players:['Viktor Eriksson','Per Nilsson','Erik Skaremyr']}
+  ]},
+  { slot:5, courseId:4, date:'7/8-26', teeTimes:{1:'',2:'',3:''}, groups:null },
   { slot:6, courseId:6, date:'', teeTimes:{1:'',2:'',3:''}, groups:null }
 ]
+
+function chunkPlayers(players) {
+  const chunks = []
+  for (let i = 0; i < players.length; i += 4) {
+    const groupPlayers = players.slice(i, i + 4)
+    chunks.push({ id: chunks.length + 1, name: groupPlayers.length === 3 ? 'Treboll' : `Fyrboll ${chunks.length + 1}`, players: groupPlayers })
+  }
+  return chunks
+}
 
 function buildScores(players, rounds) {
   return Object.fromEntries(players.map(p => [p, Object.fromEntries(rounds.map(r => [r.slot, { hcp:'', holeScores:Array(18).fill('') }]))]))
 }
+
 function calcPlayingHcp(hcp, slope=113, cr=72, par=72) {
   const n = parseFloat(String(hcp ?? '').replace(',', '.'))
   if (Number.isNaN(n)) return 0
   return Math.round(n * slope / 113 + (cr - par))
 }
+
 function calcStableford(strokes, par, si, hcp) {
   if (strokes === '' || strokes == null) return null
   const s = Number(strokes)
@@ -59,6 +91,11 @@ function calcStableford(strokes, par, si, hcp) {
   if (net === 1) return 1
   return 0
 }
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value ?? {}))
+}
+
 function useTournamentData() {
   const [state, setState] = useState({
     loading:true,
@@ -70,6 +107,7 @@ function useTournamentData() {
     gallery: {},
     comments: {}
   })
+
   useEffect(() => {
     const ref = doc(db, 'tournament', 'data')
     return onSnapshot(ref, snap => {
@@ -89,18 +127,24 @@ function useTournamentData() {
       })
     }, () => setState(s => ({...s, loading:false})))
   }, [])
+
   async function save(patch) {
     setState(s => ({...s, ...patch}))
     await setDoc(doc(db, 'tournament', 'data'), patch, { merge:true })
   }
+
   return { ...state, save }
 }
-function courseFor(courses, round) { return courses.find(c => c.id === round.courseId) || courses[0] || DEFAULT_COURSES[0] }
+
+function courseFor(courses, round) {
+  return courses.find(c => c.id === round?.courseId) || courses[0] || DEFAULT_COURSES[0]
+}
+
 function playerRoundResult(player, round, courses, scores, playerHcp) {
   const course = courseFor(courses, round)
-  const score = scores[player]?.[round.slot]
+  const score = scores?.[player]?.[round?.slot]
   const holes = course.holes?.length === 18 ? course.holes : makeHoles()
-  const hcp = score?.hcp || playerHcp[player] || ''
+  const hcp = score?.hcp || playerHcp?.[player] || ''
   const playing = calcPlayingHcp(hcp, course.slope, course.cr, course.par)
   const holeScores = score?.holeScores || Array(18).fill('')
   const played = holeScores.filter(v => v !== '' && Number(v) > 0).length
@@ -112,6 +156,7 @@ function playerRoundResult(player, round, courses, scores, playerHcp) {
   const adj = points > 0 ? Math.round(points * (113 / (course.slope || 113)) * 10) / 10 : 0
   return { player, course, played, strokes, points, adj, playing, hcp, holeScores }
 }
+
 function leaderboard(players, rounds, courses, scores, playerHcp) {
   return players.map(player => {
     const results = rounds.map(r => playerRoundResult(player, r, courses, scores, playerHcp)).filter(r => r.played > 0)
@@ -121,12 +166,29 @@ function leaderboard(players, rounds, courses, scores, playerHcp) {
   }).sort((a,b) => b.total - a.total || b.rounds - a.rounds)
 }
 
+function useLocalIdentity() {
+  const [identity, setIdentity] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('vm2_identity') || '{}') }
+    catch { return {} }
+  })
+  function update(patch) {
+    const next = { ...identity, ...patch }
+    setIdentity(next)
+    localStorage.setItem('vm2_identity', JSON.stringify(next))
+  }
+  function clear() {
+    setIdentity({})
+    localStorage.removeItem('vm2_identity')
+  }
+  return { identity, update, clear }
+}
+
 function App() {
   const data = useTournamentData()
+  const { identity, update: updateIdentity, clear: clearIdentity } = useLocalIdentity()
   const [view, setView] = useState('home')
   const [admin, setAdmin] = useState(false)
   const [selectedRound, setSelectedRound] = useState(1)
-  const [selectedPlayer, setSelectedPlayer] = useState(DEFAULT_PLAYERS[0])
   const board = useMemo(() => leaderboard(data.players, data.rounds, data.courses, data.scores, data.playerHcp), [data.players, data.rounds, data.courses, data.scores, data.playerHcp])
   const nextRound = data.rounds.find(r => !data.players.some(p => playerRoundResult(p, r, data.courses, data.scores, data.playerHcp).played > 0)) || data.rounds[0]
   const nextCourse = courseFor(data.courses, nextRound)
@@ -136,11 +198,13 @@ function App() {
     if (pwd === ADMIN_PASSWORD) setAdmin(true)
     else if (pwd) alert('Fel lösenord')
   }
+
   async function updateHcp(player, value) {
     await data.save({ playerHcp: { ...data.playerHcp, [player]: value } })
   }
+
   async function updateHole(player, roundSlot, holeIndex, value) {
-    const scores = structuredClone(data.scores || {})
+    const scores = clone(data.scores)
     scores[player] ||= {}
     scores[player][roundSlot] ||= { hcp:'', holeScores:Array(18).fill('') }
     scores[player][roundSlot].holeScores ||= Array(18).fill('')
@@ -150,32 +214,54 @@ function App() {
 
   return <div className="shell">
     <aside className="sidebar">
-      <div className="brand"><span>♛</span><div><b>VOLVO</b><small>MASTERS 2.0</small></div></div>
+      <div className="brand"><span>♛</span><div><b>VOLVO</b><small>MASTERS 2.2</small></div></div>
       <Nav view={view} setView={setView} />
       <button className="adminButton" onClick={admin ? () => setAdmin(false) : login}>{admin ? 'Lämna admin' : 'Admin'}</button>
     </aside>
+
     <main className="content">
-      <Topbar loading={data.loading} admin={admin} />
+      <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
       {view === 'home' && <Home board={board} nextRound={nextRound} nextCourse={nextCourse} setView={setView} />}
       {view === 'leaderboard' && <Leaderboard board={board} />}
       {view === 'rounds' && <Rounds rounds={data.rounds} courses={data.courses} setView={setView} setSelectedRound={setSelectedRound} />}
-      {view === 'score' && <Scorecard admin={admin} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} selectedRound={selectedRound} setSelectedRound={setSelectedRound} selectedPlayer={selectedPlayer} setSelectedPlayer={setSelectedPlayer} updateHole={updateHole} updateHcp={updateHcp} />}
+      {view === 'score' && <BallScorecard admin={admin} identity={identity} updateIdentity={updateIdentity} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} selectedRound={selectedRound} setSelectedRound={setSelectedRound} updateHole={updateHole} updateHcp={updateHcp} />}
       {view === 'players' && <Players players={data.players} board={board} playerHcp={data.playerHcp} updateHcp={updateHcp} admin={admin} />}
       {view === 'stats' && <Stats board={board} rounds={data.rounds} players={data.players} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} />}
-      {view === 'chat' && <Chat players={data.players} />}
+      {view === 'chat' && <Chat players={data.players} identity={identity} />}
       {view === 'gallery' && <Gallery gallery={data.gallery} rounds={data.rounds} courses={data.courses} />}
     </main>
+
     <footer className="bottomNav"><Nav view={view} setView={setView} compact /></footer>
   </div>
 }
+
 function Nav({view, setView, compact=false}) {
-  const items = [['home','Hem','⌂'], ['leaderboard','Leaderboard','🏆'], ['rounds','Rundor','⛳'], ['score','Score','✍️'], ['players','Spelare','👥'], ['stats','Statistik','📊'], ['chat','Chat','💬'], ['gallery','Galleri','📷']]
-  return <nav className={compact ? 'nav compact' : 'nav'}>{items.map(([id,label,icon]) => <button key={id} className={view===id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{!compact && label}</button>)}</nav>
+  const items = [
+    ['home','⌂','Hem'], ['leaderboard','🏆','Leaderboard'], ['rounds','⛳','Rundor'], ['score','✍️','Score'],
+    ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'], ['gallery','🖼️','Galleri']
+  ]
+  return <nav className={compact ? 'nav compact' : 'nav'}>{items.map(([id, icon, label]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{!compact && label}</button>)}</nav>
 }
-function Topbar({loading, admin}) { return <header className="topbar"><div><small>Live från Firebase</small><h1>Volvo Masters 2026</h1></div><div className="pills"><span>{loading ? 'Laddar…' : 'Synkad'}</span>{admin && <b>Adminläge</b>}</div></header> }
+
+function Topbar({loading, admin, identity, clearIdentity}) {
+  return <header className="topbar">
+    <div><small>Live från Firebase</small><h1>Volvo Masters 2026</h1></div>
+    <div className="pills">
+      {identity?.marker && <button className="identityPill" onClick={clearIdentity}>Markör: {identity.marker}</button>}
+      <span>{loading ? 'Synkar…' : 'Synkad'}</span>
+      {admin && <b>Admin aktiv</b>}
+    </div>
+  </header>
+}
+
 function Home({board, nextRound, nextCourse, setView}) {
   return <section className="homeGrid">
-    <div className="heroCard"><p className="eyebrow">Nästa deltävling</p><h2>{nextCourse.emoji} {nextCourse.name}</h2><p>{nextRound.date || 'Datum kommer'} · Tee {nextCourse.tee} · Slope {nextCourse.slope}</p><div className="heroActions"><button onClick={() => setView('score')}>Starta scorekort</button><button className="ghost" onClick={() => setView('rounds')}>Visa rundor</button></div></div>
+    <div className="heroCard">
+      <small>Nästa deltävling</small>
+      <h2>{nextCourse.emoji} {nextCourse.name}</h2>
+      <p>{nextRound.date || 'Datum kommer'} · Tee {nextCourse.tee} · Slope {nextCourse.slope}</p>
+      <div className="heroActions"><button onClick={() => setView('score')}>Starta scorekort</button><button className="ghost" onClick={() => setView('rounds')}>Visa rundor</button></div>
+    </div>
     <Podium board={board} />
     <Metric title="Spelare" value="12" text="Volvo Masters-fält" />
     <Metric title="Deltävlingar" value="6" text="Bästa 4 räknas" />
@@ -183,93 +269,153 @@ function Home({board, nextRound, nextCourse, setView}) {
     <div className="panel wide"><h3>Snabbval</h3><div className="quickGrid"><button onClick={()=>setView('leaderboard')}>🏆 Leaderboard</button><button onClick={()=>setView('score')}>✍️ Fyll score</button><button onClick={()=>setView('chat')}>💬 Chat</button><button onClick={()=>setView('stats')}>📊 Statistik</button></div></div>
   </section>
 }
-function Podium({board}) { const top = board.slice(0,3); return <div className="panel podium"><h3>Topp 3 totalt</h3>{top.map((p,i) => <div className="podiumRow" key={p.player}><span>{['🥇','🥈','🥉'][i]}</span><b>{p.player}</b><strong>{p.total}p</strong></div>)}</div> }
-function Metric({title,value,text}) { return <div className="metric"><small>{title}</small><strong>{value}</strong><span>{text}</span></div> }
-function Leaderboard({board}) { return <section className="panel"><div className="sectionHead"><h2>Leaderboard</h2><span>Top 4 justerat mot slope</span></div>{board.map((p,i) => <div className="leaderRow" key={p.player}><span className="rank">{i+1}</span><div><b>{p.player}</b><small>{p.rounds} spelade rundor</small></div><strong>{p.total}p</strong></div>)}</section> }
-function Rounds({rounds, courses, setView, setSelectedRound}) { return <section className="cards">{rounds.map(r => { const c = courseFor(courses, r); return <article className="roundCard" key={r.slot}><div className="courseArt">{c.emoji}</div><small>Rond {r.slot}</small><h3>{c.name}</h3><p>{r.date || 'Datum kommer'} · {c.location}</p><div className="roundMeta"><span>Par {c.par}</span><span>Slope {c.slope}</span><span>Tee {c.tee}</span></div><button onClick={() => { setSelectedRound(r.slot); setView('score') }}>Öppna score</button></article> })}</section> }
-function Scorecard({admin, players, rounds, courses, scores, playerHcp, selectedRound, setSelectedRound, selectedPlayer, setSelectedPlayer, updateHole, updateHcp}) {
+
+function Podium({board}) {
+  const top = board.slice(0,3)
+  return <div className="panel podium"><h3>Topp 3 totalt</h3>{top.map((p,i) => <div className="podiumRow" key={p.player}><span>{['🥇','🥈','🥉'][i]}</span><b>{p.player}</b><strong>{p.total}p</strong></div>)}</div>
+}
+
+function Metric({title,value,text}) {
+  return <div className="metric"><small>{title}</small><strong>{value}</strong><span>{text}</span></div>
+}
+
+function Leaderboard({board}) {
+  return <section className="panel"><div className="sectionHead"><h2>Leaderboard</h2><span>Top 4 justerat mot slope</span></div>{board.map((p,i) => <div className="leaderRow" key={p.player}><span className="rank">{i+1}</span><div><b>{p.player}</b><small>{p.rounds} spelade rundor</small></div><strong>{p.total}p</strong></div>)}</section>
+}
+
+function Rounds({rounds, courses, setView, setSelectedRound}) {
+  return <section className="cards">{rounds.map(r => {
+    const c = courseFor(courses, r)
+    const groups = r.groups || []
+    return <article className="roundCard" key={r.slot}><div className="courseArt">{c.emoji}</div><small>Rond {r.slot}</small><h3>{c.name}</h3><p>{r.date || 'Datum kommer'} · {c.location}</p><div className="roundMeta"><span>Par {c.par}</span><span>Slope {c.slope}</span><span>Tee {c.tee}</span><span>{groups.length || 3} bollar</span></div><button onClick={() => { setSelectedRound(r.slot); setView('score') }}>Öppna score</button></article>
+  })}</section>
+}
+
+function BallScorecard({admin, identity, updateIdentity, players, rounds, courses, scores, playerHcp, selectedRound, setSelectedRound, updateHole, updateHcp}) {
   const [activeHole, setActiveHole] = useState(0)
   const round = rounds.find(r => r.slot === Number(selectedRound)) || rounds[0]
   const course = courseFor(courses, round)
-  const result = playerRoundResult(selectedPlayer, round, courses, scores, playerHcp)
+  const groups = round.groups?.length ? round.groups : chunkPlayers(players)
+  const selectedGroup = groups.find(g => String(g.id) === String(identity.groupId)) || groups[0]
+  const marker = identity.marker || ''
+  const groupPlayers = selectedGroup?.players?.length ? selectedGroup.players : players.slice(0,4)
   const holes = course.holes?.length === 18 ? course.holes : makeHoles()
-  const current = holes[activeHole] || holes[0]
-  const currentScore = result.holeScores[activeHole] || ''
-  const currentPts = calcStableford(currentScore, current.par, current.si, result.playing)
-  const progress = Math.round((result.played / 18) * 100)
-  const roundPlayers = round.groups?.flatMap(g => g.players) || players
-  const strokeOptions = [current.par - 2, current.par - 1, current.par, current.par + 1, current.par + 2, current.par + 3].filter(n => n > 0)
+  const hole = holes[activeHole]
+  const canEditGroup = admin || (marker && groupPlayers.includes(marker))
 
-  function holeName(score) {
-    if (score === '' || score == null) return 'Ej ifyllt'
-    const diff = Number(score) - current.par
-    if (diff <= -2) return 'Eagle+'
-    if (diff === -1) return 'Birdie'
-    if (diff === 0) return 'Par'
-    if (diff === 1) return 'Bogey'
-    if (diff === 2) return 'Dubbel'
-    return 'Tufft hål'
+  useEffect(() => {
+    if (!identity.groupId && groups[0]) updateIdentity({ groupId: groups[0].id })
+  }, [identity.groupId, groups, updateIdentity])
+
+  function setScore(player, value) {
+    if (!canEditGroup) return
+    updateHole(player, round.slot, activeHole, value)
   }
 
-  return <section className="scoreLayout scoreLayoutPro">
-    <div className="panel controls scoreControlPanel">
-      <div className="scoreBadge">Live scorekort</div>
+  function addStroke(player, delta) {
+    const current = scores?.[player]?.[round.slot]?.holeScores?.[activeHole] || ''
+    const base = current === '' ? hole.par : Number(current)
+    const next = Math.max(1, base + delta)
+    setScore(player, String(next))
+  }
+
+  const groupTotals = groupPlayers.map(player => playerRoundResult(player, round, courses, scores, playerHcp))
+  const completed = groupTotals.reduce((sum, r) => sum + r.played, 0)
+  const totalSlots = groupPlayers.length * 18
+  const progress = Math.round((completed / totalSlots) * 100)
+
+  return <section className="ballScorePage">
+    <div className="panel ballSetup">
+      <div className="scoreBadge">Volvo Masters 2.2 · Boll-läge</div>
       <h2>{course.name}</h2>
       <p className="hint">{round.date || 'Datum kommer'} · Tee {course.tee} · Slope {course.slope}</p>
-      <label>Rond<select value={selectedRound} onChange={e => { setSelectedRound(Number(e.target.value)); setActiveHole(0) }}>{rounds.map(r => <option key={r.slot} value={r.slot}>Rond {r.slot}</option>)}</select></label>
-      <label>Spelare<select value={selectedPlayer} onChange={e => { setSelectedPlayer(e.target.value); setActiveHole(0) }}>{players.map(p => <option key={p}>{p}</option>)}</select></label>
-      <label>HCP<input disabled={!admin} value={playerHcp[selectedPlayer] || ''} onChange={e => updateHcp(selectedPlayer, e.target.value)} placeholder="Ange HCP" /></label>
+
+      <div className="setupGrid">
+        <label>Rond<select value={selectedRound} onChange={e => { setSelectedRound(Number(e.target.value)); setActiveHole(0) }}>{rounds.map(r => <option key={r.slot} value={r.slot}>Rond {r.slot}</option>)}</select></label>
+        <label>Boll<select value={selectedGroup?.id || ''} onChange={e => updateIdentity({ groupId: e.target.value, marker: '' })}>{groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
+        <label>Jag är markör<select value={marker} onChange={e => updateIdentity({ marker: e.target.value })}><option value="">Välj namn</option>{groupPlayers.map(p => <option key={p}>{p}</option>)}</select></label>
+      </div>
+
+      <div className="groupPlayers">
+        {groupPlayers.map(p => <span key={p} className={p === marker ? 'markerChip' : ''}>{p.split(' ')[0]}</span>)}
+      </div>
+
       <div className="scoreSummary premiumSummary">
-        <b>{selectedPlayer}</b>
-        <span>Spelhcp {result.playing} · {result.played}/18 hål</span>
-        <strong>{result.points}p</strong>
+        <b>{selectedGroup?.name}</b>
+        <span>{canEditGroup ? 'Du kan föra score för hela bollen' : 'Välj markör för att kunna fylla i score'}</span>
+        <strong>{progress}%</strong>
         <div className="progress"><i style={{width:`${progress}%`}} /></div>
       </div>
-      <div className="groupList">
-        <small>Spelare i rundan</small>
-        <div>{roundPlayers.map(p => <button key={p} className={p === selectedPlayer ? 'chip active' : 'chip'} onClick={() => setSelectedPlayer(p)}>{p.split(' ')[0]}</button>)}</div>
-      </div>
-      {!admin && <p className="hint">Logga in som admin för att ändra score. Visning är öppen för alla.</p>}
     </div>
 
-    <div className="panel mobileScoreHero">
-      <div className="holeTopline"><span>Hål {activeHole + 1}</span><b>{holeName(currentScore)}</b></div>
+    <div className="panel holeCommander">
+      <div className="holeTopline"><span>Hål {activeHole + 1} av 18</span><b>Par {hole.par} · SI {hole.si}</b></div>
       <div className="holeNumber">{activeHole + 1}</div>
-      <div className="holeFacts"><span>Par {current.par}</span><span>SI {current.si}</span><span>{currentPts ?? '-'}p</span></div>
-      <div className="strokePad">
-        {strokeOptions.map(n => <button key={n} disabled={!admin} className={String(currentScore) === String(n) ? 'selected' : ''} onClick={() => updateHole(selectedPlayer, round.slot, activeHole, String(n))}>{n}<small>{n - current.par === 0 ? 'Par' : n - current.par > 0 ? `+${n-current.par}` : `${n-current.par}`}</small></button>)}
-        <button disabled={!admin} className="clearBtn" onClick={() => updateHole(selectedPlayer, round.slot, activeHole, '')}>Rensa</button>
+      <div className="groupScoreRows">
+        {groupPlayers.map(player => {
+          const result = playerRoundResult(player, round, courses, scores, playerHcp)
+          const value = result.holeScores[activeHole] || ''
+          const pts = calcStableford(value, hole.par, hole.si, result.playing)
+          return <div className="scorePlayerRow" key={player}>
+            <div><b>{player}</b><small>Spelhcp {result.playing} · totalt {result.points}p</small></div>
+            <div className="scoreStepper">
+              <button disabled={!canEditGroup} onClick={() => addStroke(player, -1)}>−</button>
+              <input disabled={!canEditGroup} inputMode="numeric" value={value} placeholder="—" onChange={e => setScore(player, e.target.value.replace(/\D/g,'').slice(0,2))} />
+              <button disabled={!canEditGroup} onClick={() => addStroke(player, 1)}>+</button>
+            </div>
+            <strong>{pts ?? '-'}p</strong>
+          </div>
+        })}
       </div>
       <div className="holeStepper">
         <button className="ghost" onClick={() => setActiveHole(h => Math.max(0, h - 1))}>← Föregående</button>
         <button onClick={() => setActiveHole(h => Math.min(17, h + 1))}>Nästa →</button>
       </div>
-      <div className="miniHoles">{holes.map((h,i) => <button key={i} className={i === activeHole ? 'active' : result.holeScores[i] ? 'done' : ''} onClick={() => setActiveHole(i)}>{i+1}</button>)}</div>
+      <div className="miniHoles">{holes.map((h,i) => {
+        const done = groupPlayers.every(p => scores?.[p]?.[round.slot]?.holeScores?.[i])
+        return <button key={i} className={i === activeHole ? 'active' : done ? 'done' : ''} onClick={() => setActiveHole(i)}>{i+1}</button>
+      })}</div>
     </div>
 
-    <div className="panel scoreTable wideScore">
-      <div className="sectionHead"><h2>Översikt hål 1–18</h2><span>{result.strokes || '—'} slag · {result.points} poäng</span></div>
-      <div className="holesGrid">{holes.map((h,i) => <div className="holeBox" key={i} onClick={() => setActiveHole(i)}>
-        <small>Hål {i+1}</small><b>Par {h.par}</b><em>SI {h.si}</em>
-        <input disabled={!admin} inputMode="numeric" value={result.holeScores[i] || ''} onChange={e => updateHole(selectedPlayer, round.slot, i, e.target.value.replace(/\D/g,'').slice(0,2))} />
-        <span>{calcStableford(result.holeScores[i], h.par, h.si, result.playing) ?? '-'}p</span>
-      </div>)}</div>
+    <div className="panel wideScore groupOverview">
+      <div className="sectionHead"><h2>Bollöversikt</h2><span>Live stableford</span></div>
+      <div className="groupResults">{groupTotals.map(r => <div className="groupResult" key={r.player}><b>{r.player}</b><span>{r.played}/18 hål</span><strong>{r.points}p</strong><small>{r.strokes || '—'} slag</small></div>)}</div>
     </div>
+
+    {admin && <div className="panel adminHcpBox"><h3>Admin · HCP</h3>{groupPlayers.map(p => <label key={p}>{p}<input value={playerHcp[p] || ''} onChange={e => updateHcp(p, e.target.value)} placeholder="HCP" /></label>)}</div>}
   </section>
 }
-function Players({players, board, playerHcp, updateHcp, admin}) { return <section className="cards">{players.map(p => { const row = board.find(b => b.player === p); return <article className="playerCard" key={p}><div className="avatar">{p.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><h3>{p}</h3><p>Totalt {row?.total || 0}p · {row?.rounds || 0} rundor</p><input disabled={!admin} value={playerHcp[p] || ''} onChange={e => updateHcp(p, e.target.value)} placeholder="HCP" /></article> })}</section> }
+
+function Players({players, board, playerHcp, updateHcp, admin}) {
+  return <section className="cards">{players.map(p => {
+    const row = board.find(b => b.player === p)
+    return <article className="playerCard" key={p}><div className="avatar">{p.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><h3>{p}</h3><p>Totalt {row?.total || 0}p · {row?.rounds || 0} rundor</p><input disabled={!admin} value={playerHcp[p] || ''} onChange={e => updateHcp(p, e.target.value)} placeholder="HCP" /></article>
+  })}</section>
+}
+
 function Stats({board, rounds, players, courses, scores, playerHcp}) {
   const bestRound = board.flatMap(p => p.best.map(r => ({...r, player:p.player}))).sort((a,b)=>b.adj-a.adj)[0]
   const totalPlayed = players.reduce((sum,p)=> sum + rounds.filter(r => playerRoundResult(p,r,courses,scores,playerHcp).played > 0).length,0)
   return <section className="homeGrid"><Metric title="Registrerade rundor" value={totalPlayed} text="Totalt i systemet"/><Metric title="Bästa runda" value={bestRound ? `${bestRound.adj}p` : '—'} text={bestRound?.player || 'Ingen data än'}/><Metric title="Ledare" value={board[0]?.total || 0} text={board[0]?.player || 'Ingen data'}/><div className="panel wide"><h2>Formtabell</h2>{board.slice(0,8).map(p => <div className="leaderRow" key={p.player}><div><b>{p.player}</b><small>{p.best.map(r=>r.adj).join(' · ') || 'Inga rundor'}</small></div><strong>{p.total}p</strong></div>)}</div></section>
 }
-function Chat({players}) {
+
+function Chat({players, identity}) {
   const [messages, setMessages] = useState([])
-  const [name, setName] = useState(players[0] || '')
+  const [name, setName] = useState(identity?.marker || players[0] || '')
   const [text, setText] = useState('')
+  useEffect(() => { if (identity?.marker) setName(identity.marker) }, [identity?.marker])
   useEffect(() => { const q = query(collection(db,'chat'), orderBy('time','asc')); return onSnapshot(q, snap => setMessages(snap.docs.map(d => ({id:d.id, ...d.data()}))), () => {}) }, [])
-  async function send() { if (!text.trim()) return; await addDoc(collection(db,'chat'), { name, text:text.trim(), time:Date.now(), timeStr:new Date().toLocaleString('sv-SE') }); setText('') }
+  async function send() {
+    if (!text.trim()) return
+    await addDoc(collection(db,'chat'), { name, text:text.trim(), time:Date.now(), timeStr:new Date().toLocaleString('sv-SE') })
+    setText('')
+  }
   return <section className="chatPanel"><div className="panel messages"><h2>Chat</h2>{messages.slice(-40).map(m => <div className="msg" key={m.id}><b>{m.name}</b><p>{m.text}</p><small>{m.timeStr}</small></div>)}</div><div className="panel composer"><select value={name} onChange={e=>setName(e.target.value)}>{players.map(p=><option key={p}>{p}</option>)}</select><textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Skriv meddelande…"/><button onClick={send}>Skicka</button></div></section>
 }
-function Gallery({gallery, rounds, courses}) { const imgs = rounds.flatMap(r => (gallery[r.slot] || []).map(img => ({...img, course:courseFor(courses,r).name}))); return <section className="cards">{imgs.length ? imgs.map((img,i)=><article className="galleryCard" key={i}><img src={img.url} /><b>{img.course}</b><p>{img.caption}</p></article>) : <div className="panel"><h2>Galleri</h2><p>Inga bilder ännu. Galleri är förberett för gamla appens dataformat.</p></div>}</section> }
+
+function Gallery({gallery, rounds, courses}) {
+  const imgs = rounds.flatMap(r => (gallery?.[r.slot] || []).map(img => ({...img, course:courseFor(courses,r).name})))
+  return <section className="cards">{imgs.length ? imgs.map((img,i)=><article className="galleryCard" key={i}><img src={img.url} /><b>{img.course}</b><p>{img.caption}</p></article>) : <div className="panel"><h2>Galleri</h2><p>Inga bilder ännu. Galleri är förberett för gamla appens dataformat.</p></div>}</section>
+}
+
 export default App
