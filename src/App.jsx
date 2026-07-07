@@ -188,13 +188,73 @@ function Metric({title,value,text}) { return <div className="metric"><small>{tit
 function Leaderboard({board}) { return <section className="panel"><div className="sectionHead"><h2>Leaderboard</h2><span>Top 4 justerat mot slope</span></div>{board.map((p,i) => <div className="leaderRow" key={p.player}><span className="rank">{i+1}</span><div><b>{p.player}</b><small>{p.rounds} spelade rundor</small></div><strong>{p.total}p</strong></div>)}</section> }
 function Rounds({rounds, courses, setView, setSelectedRound}) { return <section className="cards">{rounds.map(r => { const c = courseFor(courses, r); return <article className="roundCard" key={r.slot}><div className="courseArt">{c.emoji}</div><small>Rond {r.slot}</small><h3>{c.name}</h3><p>{r.date || 'Datum kommer'} · {c.location}</p><div className="roundMeta"><span>Par {c.par}</span><span>Slope {c.slope}</span><span>Tee {c.tee}</span></div><button onClick={() => { setSelectedRound(r.slot); setView('score') }}>Öppna score</button></article> })}</section> }
 function Scorecard({admin, players, rounds, courses, scores, playerHcp, selectedRound, setSelectedRound, selectedPlayer, setSelectedPlayer, updateHole, updateHcp}) {
+  const [activeHole, setActiveHole] = useState(0)
   const round = rounds.find(r => r.slot === Number(selectedRound)) || rounds[0]
   const course = courseFor(courses, round)
   const result = playerRoundResult(selectedPlayer, round, courses, scores, playerHcp)
   const holes = course.holes?.length === 18 ? course.holes : makeHoles()
-  return <section className="scoreLayout">
-    <div className="panel controls"><h2>Scorekort</h2><label>Rond<select value={selectedRound} onChange={e => setSelectedRound(Number(e.target.value))}>{rounds.map(r => <option key={r.slot} value={r.slot}>Rond {r.slot}</option>)}</select></label><label>Spelare<select value={selectedPlayer} onChange={e => setSelectedPlayer(e.target.value)}>{players.map(p => <option key={p}>{p}</option>)}</select></label><label>HCP<input disabled={!admin} value={playerHcp[selectedPlayer] || ''} onChange={e => updateHcp(selectedPlayer, e.target.value)} placeholder="Ange HCP" /></label><div className="scoreSummary"><b>{course.name}</b><span>Spelhcp {result.playing}</span><strong>{result.points}p</strong></div>{!admin && <p className="hint">Logga in som admin för att ändra score.</p>}</div>
-    <div className="panel scoreTable"><div className="holesGrid">{holes.map((h,i) => <div className="holeBox" key={i}><small>Hål {i+1}</small><b>Par {h.par}</b><em>SI {h.si}</em><input disabled={!admin} inputMode="numeric" value={result.holeScores[i] || ''} onChange={e => updateHole(selectedPlayer, round.slot, i, e.target.value.replace(/\D/g,'').slice(0,2))} /><span>{calcStableford(result.holeScores[i], h.par, h.si, result.playing) ?? '-'}p</span></div>)}</div></div>
+  const current = holes[activeHole] || holes[0]
+  const currentScore = result.holeScores[activeHole] || ''
+  const currentPts = calcStableford(currentScore, current.par, current.si, result.playing)
+  const progress = Math.round((result.played / 18) * 100)
+  const roundPlayers = round.groups?.flatMap(g => g.players) || players
+  const strokeOptions = [current.par - 2, current.par - 1, current.par, current.par + 1, current.par + 2, current.par + 3].filter(n => n > 0)
+
+  function holeName(score) {
+    if (score === '' || score == null) return 'Ej ifyllt'
+    const diff = Number(score) - current.par
+    if (diff <= -2) return 'Eagle+'
+    if (diff === -1) return 'Birdie'
+    if (diff === 0) return 'Par'
+    if (diff === 1) return 'Bogey'
+    if (diff === 2) return 'Dubbel'
+    return 'Tufft hål'
+  }
+
+  return <section className="scoreLayout scoreLayoutPro">
+    <div className="panel controls scoreControlPanel">
+      <div className="scoreBadge">Live scorekort</div>
+      <h2>{course.name}</h2>
+      <p className="hint">{round.date || 'Datum kommer'} · Tee {course.tee} · Slope {course.slope}</p>
+      <label>Rond<select value={selectedRound} onChange={e => { setSelectedRound(Number(e.target.value)); setActiveHole(0) }}>{rounds.map(r => <option key={r.slot} value={r.slot}>Rond {r.slot}</option>)}</select></label>
+      <label>Spelare<select value={selectedPlayer} onChange={e => { setSelectedPlayer(e.target.value); setActiveHole(0) }}>{players.map(p => <option key={p}>{p}</option>)}</select></label>
+      <label>HCP<input disabled={!admin} value={playerHcp[selectedPlayer] || ''} onChange={e => updateHcp(selectedPlayer, e.target.value)} placeholder="Ange HCP" /></label>
+      <div className="scoreSummary premiumSummary">
+        <b>{selectedPlayer}</b>
+        <span>Spelhcp {result.playing} · {result.played}/18 hål</span>
+        <strong>{result.points}p</strong>
+        <div className="progress"><i style={{width:`${progress}%`}} /></div>
+      </div>
+      <div className="groupList">
+        <small>Spelare i rundan</small>
+        <div>{roundPlayers.map(p => <button key={p} className={p === selectedPlayer ? 'chip active' : 'chip'} onClick={() => setSelectedPlayer(p)}>{p.split(' ')[0]}</button>)}</div>
+      </div>
+      {!admin && <p className="hint">Logga in som admin för att ändra score. Visning är öppen för alla.</p>}
+    </div>
+
+    <div className="panel mobileScoreHero">
+      <div className="holeTopline"><span>Hål {activeHole + 1}</span><b>{holeName(currentScore)}</b></div>
+      <div className="holeNumber">{activeHole + 1}</div>
+      <div className="holeFacts"><span>Par {current.par}</span><span>SI {current.si}</span><span>{currentPts ?? '-'}p</span></div>
+      <div className="strokePad">
+        {strokeOptions.map(n => <button key={n} disabled={!admin} className={String(currentScore) === String(n) ? 'selected' : ''} onClick={() => updateHole(selectedPlayer, round.slot, activeHole, String(n))}>{n}<small>{n - current.par === 0 ? 'Par' : n - current.par > 0 ? `+${n-current.par}` : `${n-current.par}`}</small></button>)}
+        <button disabled={!admin} className="clearBtn" onClick={() => updateHole(selectedPlayer, round.slot, activeHole, '')}>Rensa</button>
+      </div>
+      <div className="holeStepper">
+        <button className="ghost" onClick={() => setActiveHole(h => Math.max(0, h - 1))}>← Föregående</button>
+        <button onClick={() => setActiveHole(h => Math.min(17, h + 1))}>Nästa →</button>
+      </div>
+      <div className="miniHoles">{holes.map((h,i) => <button key={i} className={i === activeHole ? 'active' : result.holeScores[i] ? 'done' : ''} onClick={() => setActiveHole(i)}>{i+1}</button>)}</div>
+    </div>
+
+    <div className="panel scoreTable wideScore">
+      <div className="sectionHead"><h2>Översikt hål 1–18</h2><span>{result.strokes || '—'} slag · {result.points} poäng</span></div>
+      <div className="holesGrid">{holes.map((h,i) => <div className="holeBox" key={i} onClick={() => setActiveHole(i)}>
+        <small>Hål {i+1}</small><b>Par {h.par}</b><em>SI {h.si}</em>
+        <input disabled={!admin} inputMode="numeric" value={result.holeScores[i] || ''} onChange={e => updateHole(selectedPlayer, round.slot, i, e.target.value.replace(/\D/g,'').slice(0,2))} />
+        <span>{calcStableford(result.holeScores[i], h.par, h.si, result.playing) ?? '-'}p</span>
+      </div>)}</div>
+    </div>
   </section>
 }
 function Players({players, board, playerHcp, updateHcp, admin}) { return <section className="cards">{players.map(p => { const row = board.find(b => b.player === p); return <article className="playerCard" key={p}><div className="avatar">{p.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><h3>{p}</h3><p>Totalt {row?.total || 0}p · {row?.rounds || 0} rundor</p><input disabled={!admin} value={playerHcp[p] || ''} onChange={e => updateHcp(p, e.target.value)} placeholder="HCP" /></article> })}</section> }
