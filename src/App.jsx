@@ -225,7 +225,7 @@ function App() {
 
   return <div className="shell">
     <aside className="sidebar">
-      <div className="brand"><span>♛</span><div><b>VOLVO</b><small>MASTERS 2.2</small></div></div>
+      <div className="brand"><span>♛</span><div><b>VOLVO</b><small>MASTERS 2.4</small></div></div>
       <Nav view={view} setView={setView} />
       <button className="adminButton" onClick={admin ? () => setAdmin(false) : login}>{admin ? 'Lämna admin' : 'Admin'}</button>
     </aside>
@@ -291,7 +291,21 @@ function Metric({title,value,text}) {
 }
 
 function Leaderboard({board}) {
-  return <section className="panel"><div className="sectionHead"><h2>Leaderboard</h2><span>Top 4 justerat mot slope</span></div>{board.map((p,i) => <div className="leaderRow" key={p.player}><span className="rank">{i+1}</span><div><b>{p.player}</b><small>{p.rounds} spelade rundor</small></div><strong>{p.total}p</strong></div>)}</section>
+  return <section className="leaderboardPro">
+    <div className="sectionHead"><h2>Leaderboard</h2><span>Top 4 justerat mot slope</span></div>
+    <div className="podiumStage">
+      {board.slice(0,3).map((p,i)=><div className={`podiumBlock place${i+1}`} key={p.player}>
+        <span>{['🥇','🥈','🥉'][i]}</span><b>{p.player.split(' ')[0]}</b><strong>{p.total}p</strong><small>{p.rounds} rundor</small>
+      </div>)}
+    </div>
+    <div className="panel">
+      {board.map((p,i) => <div className="leaderRow enhanced" key={p.player}>
+        <span className="rank">{i+1}</span>
+        <div><b>{p.player}</b><small>{p.rounds} spelade · bästa: {p.best?.[0]?.adj || 0}p · senaste: {p.latest?.points || 0}p</small></div>
+        <strong>{p.total}p</strong>
+      </div>)}
+    </div>
+  </section>
 }
 
 function Rounds({rounds, courses, setView, setSelectedRound}) {
@@ -398,10 +412,48 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
 }
 
 function Players({players, board, playerHcp, updateHcp, admin}) {
-  return <section className="cards">{players.map(p => {
-    const row = board.find(b => b.player === p)
-    return <article className="playerCard" key={p}><div className="avatar">{p.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><h3>{p}</h3><p>Totalt {row?.total || 0}p · {row?.rounds || 0} rundor</p><input disabled={!admin} value={playerHcp[p] || ''} onChange={e => updateHcp(p, e.target.value)} placeholder="HCP" /></article>
-  })}</section>
+  const [selected, setSelected] = useState(players[0] || '')
+  const row = board.find(b => b.player === selected)
+  const best = row?.best || []
+  const latest = row?.latest
+  const initials = selected.split(' ').map(x=>x[0]).join('').slice(0,2)
+  return <section className="playersPro">
+    <div className="panel playerHero">
+      <div className="bigAvatar">{initials}</div>
+      <div>
+        <small>Spelarprofil</small>
+        <h2>{selected}</h2>
+        <p>{row?.rounds || 0} spelade rundor · {row?.total || 0}p totalt · senaste {latest ? `${latest.points}p` : 'ingen runda'}</p>
+      </div>
+      {admin && <label className="hcpEditor">HCP<input value={playerHcp[selected] || ''} onChange={e => updateHcp(selected, e.target.value)} placeholder="HCP" /></label>}
+    </div>
+
+    <div className="profileGrid">
+      <div className="panel playerList">
+        <h3>Spelare</h3>
+        {players.map(p => {
+          const b = board.find(x => x.player === p)
+          return <button key={p} className={p === selected ? 'active' : ''} onClick={() => setSelected(p)}>
+            <span>{p.split(' ')[0]}</span><b>{b?.total || 0}p</b>
+          </button>
+        })}
+      </div>
+
+      <div className="panel profileStats">
+        <h3>Säsongskort</h3>
+        <div className="stats four">
+          <div><strong>{row?.total || 0}</strong><span>Poäng</span></div>
+          <div><strong>{row?.rounds || 0}</strong><span>Rundor</span></div>
+          <div><strong>{latest?.strokes || '—'}</strong><span>Senaste slag</span></div>
+          <div><strong>{latest?.net || '—'}</strong><span>Senaste netto</span></div>
+        </div>
+        <h3>Bästa rundor</h3>
+        <div className="roundHistory">
+          {best.length ? best.map((r,i)=><div key={`${r.course.name}-${i}`}><span>{i+1}. {r.course.name}</span><b>{r.adj}p</b><small>{r.strokes || '—'} brutto · {r.net || '—'} netto</small></div>) : <p className="hint">Ingen registrerad runda ännu.</p>}
+        </div>
+      </div>
+    </div>
+  </section>
 }
 
 function Stats({board, rounds, players, courses, scores, playerHcp}) {
@@ -435,6 +487,8 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
       doubles: ph.filter(h=>h.diff>=2).length,
     }
   }).sort((a,b)=>b.avgPts-a.avgPts || b.points-a.points)
+  const topBirdiePlayer = [...perPlayer].sort((a,b)=>(b.birdies + b.eagles) - (a.birdies + a.eagles))[0]
+  const topParPlayer = [...perPlayer].sort((a,b)=>b.pars-a.pars)[0]
   const hardest = Array.from({length:18}, (_,i) => {
     const hs = holes.filter(h => h.hole === i+1)
     const avgPts = hs.length ? hs.reduce((s,h)=>s+(h.pts ?? 0),0)/hs.length : 0
@@ -460,7 +514,8 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
       <article className="recordCard"><small>Bästa poäng</small><b>{bestPoints ? `${bestPoints.adj}p` : '—'}</b><span>{bestPoints?.player}</span><em>{bestPoints?.course?.name}</em></article>
       <article className="recordCard"><small>Bästa nettoslag</small><b>{bestNet ? bestNet.net : '—'}</b><span>{bestNet?.player}</span><em>{bestNet?.course?.name}</em></article>
       <article className="recordCard"><small>Bästa bruttoslag</small><b>{bestGross ? bestGross.strokes : '—'}</b><span>{bestGross?.player}</span><em>{bestGross?.course?.name}</em></article>
-      <article className="recordCard"><small>Flest birdies/eagles</small><b>{perPlayer[0]?.birdies + perPlayer[0]?.eagles || 0}</b><span>{perPlayer[0]?.player}</span><em>Säsong totalt</em></article>
+      <article className="recordCard"><small>Flest birdies/eagles</small><b>{(topBirdiePlayer?.birdies || 0) + (topBirdiePlayer?.eagles || 0)}</b><span>{topBirdiePlayer?.player}</span><em>Brutto birdies + eagles</em></article>
+      <article className="recordCard"><small>Flest par</small><b>{topParPlayer?.pars || 0}</b><span>{topParPlayer?.player}</span><em>Brutto par totalt</em></article>
     </div>}
 
     {mode === 'holes' && <div className="panel"><h3>Svåraste hålen</h3>{hardest.slice(0,18).map(h => <div className="leaderRow" key={h.hole}><div><b>Hål {h.hole}</b><small>{h.played} registrerade scorer</small></div><strong>{h.avgPts}p</strong><span className="muted">{h.avgDiff > 0 ? '+' : ''}{h.avgDiff} mot par</span></div>)}</div>}
@@ -487,3 +542,4 @@ function Gallery({gallery, rounds, courses}) {
 }
 
 export default App
+
