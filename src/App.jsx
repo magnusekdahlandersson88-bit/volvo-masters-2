@@ -299,22 +299,45 @@ function Metric({title,value,text}) {
   return <div className="metric"><small>{title}</small><strong>{value}</strong><span>{text}</span></div>
 }
 
-function Leaderboard({board}) {
-  return <section className="leaderboardPro">
-    <div className="sectionHead"><h2>Leaderboard</h2><span>Top 4 justerat mot slope</span></div>
-    <div className="podiumStage">
-      {board.slice(0,3).map((p,i)=><div className={`podiumBlock place${i+1}`} key={p.player}>
-        <span>{['🥇','🥈','🥉'][i]}</span><b>{p.player.split(' ')[0]}</b><strong>{p.total}p</strong><small>{p.rounds} rundor</small>
-      </div>)}
-    </div>
-    <div className="panel">
-      {board.map((p,i) => <div className="leaderRow enhanced" key={p.player}>
-        <span className="rank">{i+1}</span>
-        <div><b>{p.player}</b><small>{p.rounds} spelade · bästa: {p.best?.[0]?.adj || 0}p · senaste: {p.latest?.points || 0}p</small></div>
-        <strong>{p.total}p</strong>
-      </div>)}
-    </div>
-  </section>
+function Leaderboard({ board }) {
+  return (
+    <section className="leaderboardPro">
+      <div className="sectionHead">
+        <h2>Leaderboard</h2>
+        <span>Top 4 justerat mot slope</span>
+      </div>
+
+      <div className="podiumStage">
+        {board.slice(0, 3).map((p, i) => (
+          <div className={`podiumBlock place${i + 1}`} key={p.player}>
+            <span>{["🥇", "🥈", "🥉"][i]}</span>
+            <b>{p.player.split(" ")[0]}</b>
+            <strong>{p.total}p</strong>
+          </div>
+        ))}
+      </div>
+
+      <div className="panel">
+        {board.map((p, i) => (
+          <div
+            className={`leaderRow enhanced ${i < 3 ? "topThree" : ""}`}
+            key={p.player}
+          >
+            <span className="rank">
+              {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
+            </span>
+
+            <div>
+              <b>{p.player}</b>
+              <small>{p.rounds} spelade · bästa: {p.best?.[0]?.adj || 0}p</small>
+            </div>
+
+            <strong>{p.total}p</strong>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function Rounds({rounds, courses, setView, setSelectedRound}) {
