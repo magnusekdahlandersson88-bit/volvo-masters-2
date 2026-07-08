@@ -418,3 +418,10 @@ option { color: #071009; }
   font-weight:700;
   color:#fff;
 }
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #46d369;
+  box-shadow: 0 0 10px #46d369;
+}
