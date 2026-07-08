@@ -407,19 +407,8 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
       <div className="sectionHead"><h2>Bollöversikt</h2><span>Live stableford</span></div>
       <div className="groupResults">{groupTotals.map(r => <div className="groupResult" key={r.player}><b>{r.player}</b><span>{r.played}/18 hål</span><strong>{r.points}p</strong><small>{r.strokes || '—'} slag</small></div>)}</div>
     </div>
-<LiveBallFollow
-  rounds={rounds}
-  courses={courses}
-  scores={scores}
-  players={players}
-  activeRound={round}
-/>
-<LiveActivityFeed
-  rounds={rounds}
-  scores={scores}
-  players={players}
-  activeRound={round}
-/>
+
+
     {admin && <div className="panel adminHcpBox"><h3>Admin · HCP</h3>{groupPlayers.map(p => <label key={p}>{p}<input value={playerHcp[p] || ''} onChange={e => updateHcp(p, e.target.value)} placeholder="HCP" /></label>)}</div>}
   </section>
 }

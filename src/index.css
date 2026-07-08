@@ -240,3 +240,72 @@ option { color: #071009; }
 .feedDot {
   color: #d8b85f;
 }
+.scoreLayout,
+.ballScoreLayout,
+.scoreGrid {
+  align-items: start;
+}
+
+.groupOverview,
+.live-follow,
+.live-feed,
+.liveCenter {
+  grid-column: 1 / -1;
+  width: 100%;
+  clear: both;
+}
+
+.groupOverview {
+  margin-top: 28px;
+}
+
+.live-follow,
+.live-feed,
+.liveCenter {
+  margin-top: 28px;
+  padding: 32px;
+}
+
+.live-feed .sectionHead,
+.liveCenter .sectionHead,
+.live-follow .sectionHead {
+  margin-bottom: 18px;
+}
+
+.feedList,
+.groupResults,
+.ball-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.feedItem,
+.ball-card {
+  background: rgba(255,255,255,.045);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.feedItem {
+  display: flex;
+  gap: 12px;
+}
+
+.feedDot {
+  color: #d8b85f;
+}
+
+.feedItem small {
+  display: block;
+  opacity: .55;
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .live-follow,
+  .live-feed,
+  .liveCenter {
+    padding: 22px;
+  }
+}
