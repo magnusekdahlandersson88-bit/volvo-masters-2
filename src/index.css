@@ -335,7 +335,12 @@ option { color: #071009; }
 .ball-top {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 20px;
   margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
 .livePlayer {
@@ -394,4 +399,24 @@ option { color: #071009; }
 }
 .liveCards {
   justify-content: center;
+}
+.playerRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.playerRow:last-child{
+  border-bottom:none;
+}
+
+.playerName{
+  font-weight:500;
+}
+
+.playerScore{
+  font-weight:700;
+  color:#fff;
 }

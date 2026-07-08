@@ -37,15 +37,17 @@ export default function LiveBallFollow({ rounds = [], courses = [], scores = {},
                 <span>Hål {maxHole}/18</span>
               </div>
 
-              {groupPlayers.map(player => {
-                const p = playerProgress(player);
-                return (
-                  <div className="ball-player livePlayer" key={player}>
-                    <span>{player}</span>
-                    <b>{p.strokes || "—"} slag</b>
-                  </div>
-                );
-              })}
+              {groupPlayers.map(player => (
+  <div className="playerRow" key={player.name}>
+    <span className="playerName">
+      {player.name}
+    </span>
+
+    <span className="playerScore">
+      {player.strokes || "-"} slag
+    </span>
+  </div>
+))}
             </article>
           );
         })}
