@@ -370,11 +370,41 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
   }
 
   function addStroke(player, delta) {
-    const current = scores?.[player]?.[round.slot]?.holeScores?.[activeHole] || ''
-    const base = current === '' ? hole.par : Number(current)
-    const next = Math.max(1, base + delta)
-    setScore(player, String(next))
-  }
+  const current = scores?.[player]?.[round.slot]?.holeScores?.[activeHole] || ''
+  const base = current === '' ? hole.par : Number(current)
+  const next = Math.max(1, base + delta)
+
+  setScore(player, String(next))
+
+  setTimeout(() => {
+    const updatedScores = {
+      ...scores,
+      [player]: {
+        ...scores?.[player],
+        [round.slot]: {
+          ...scores?.[player]?.[round.slot],
+          holeScores: {
+            ...scores?.[player]?.[round.slot]?.holeScores,
+            [activeHole]: String(next)
+          }
+        }
+      }
+    }
+
+    const allDone = groupPlayers.every(p => {
+      const v =
+        p === player
+          ? String(next)
+          : updatedScores?.[p]?.[round.slot]?.holeScores?.[activeHole]
+
+      return v !== undefined && v !== ''
+    })
+
+    if (allDone && activeHole < 17) {
+      setActiveHole(activeHole + 1)
+    }
+  }, 150)
+}
 
   const groupTotals = groupPlayers.map(player => playerRoundResult(player, round, courses, scores, playerHcp))
   const completed = groupTotals.reduce((sum, r) => sum + r.played, 0)
@@ -409,6 +439,15 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
     <div className="panel holeCommander">
       <div className="holeTopline"><span>Hål {activeHole + 1} av 18</span><b>Par {hole.par} · SI {hole.si}</b></div>
       <div className="holeNumber">{activeHole + 1}</div>
+      <div className="holeNav">
+  <button onClick={() => setActiveHole(Math.max(0, activeHole - 1))}>
+    ← Föregående
+  </button>
+
+  <button onClick={() => setActiveHole(Math.min(17, activeHole + 1))}>
+    Nästa →
+  </button>
+</div>
       <div className="groupScoreRows">
         {groupPlayers.map(player => {
           const result = playerRoundResult(player, round, courses, scores, playerHcp)

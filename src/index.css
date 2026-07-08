@@ -475,4 +475,25 @@ option { color: #071009; }
   .podiumStage {
     grid-template-columns: 1fr;
   }
+}.holeNav {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0 22px;
+}
+
+.holeNav button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.holeNav button:hover {
+  background: rgba(215,184,74,.18);
+  border-color: #d7b84a;
 }
