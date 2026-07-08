@@ -48,6 +48,10 @@ export default function LiveBallFollow({ rounds = [], courses = [], scores = {},
     </span>
   </div>
 ))}
+<div className="liveStatus">
+  <span className="dot"></span>
+  Uppdateras live
+</div>
             </article>
           );
         })}

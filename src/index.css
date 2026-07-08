@@ -302,12 +302,10 @@ option { color: #071009; }
   margin-top: 4px;
 }
 
-@media (max-width: 900px) {
-  .live-follow,
-  .live-feed,
-  .liveCenter {
-    padding: 22px;
-  }
+@media (max-width:1100px){
+    .liveCards{
+        grid-template-columns:1fr;
+    }
 }
 .livePage {
   padding: 32px;
@@ -319,10 +317,10 @@ option { color: #071009; }
   margin-bottom: 26px;
 }
 
-.liveCards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
-  gap: 24px;
+.liveCards{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
 }
 
 .liveCard {
