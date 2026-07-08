@@ -399,6 +399,7 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
 
       <div className="scoreSummary premiumSummary">
         <b>{selectedGroup?.name}</b>
+        <small>{groupPlayers.length} spelare · Hål {activeHole + 1}/18</small>
         <span>{canEditGroup ? 'Du kan föra score för hela bollen' : 'Välj markör för att kunna fylla i score'}</span>
         <strong>{progress}%</strong>
         <div className="progress"><i style={{width:`${progress}%`}} /></div>
