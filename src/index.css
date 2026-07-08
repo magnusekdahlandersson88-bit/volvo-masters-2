@@ -497,3 +497,27 @@ option { color: #071009; }
   background: rgba(215,184,74,.18);
   border-color: #d7b84a;
 }
+.galleryPage {
+  padding: 36px;
+}
+
+.galleryPage .sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: #d7b84a;
+  color: #111;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+}

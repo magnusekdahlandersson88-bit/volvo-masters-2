@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { initializeApp } from 'firebase/app'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, query, orderBy } from 'firebase/firestore'
 import './index.css'
 import LiveBallFollow from "./components/LiveBallFollow";
 import LiveActivityFeed from "./components/LiveActivityFeed";
+import Gallery from "./components/Gallery";
 const firebaseConfig = {
   apiKey: 'AIzaSyBx8lrLzDWoYAonfiWMvOIpkkDqOo2LC88',
   authDomain: 'volvo-masters.firebaseapp.com',
@@ -15,6 +17,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
+const storage = getStorage(app)
 
 const ADMIN_PASSWORD = '340426'
 const DEFAULT_PAR = [4,3,5,4,4,3,5,4,4,4,3,5,4,4,3,5,4,4]
@@ -133,6 +136,33 @@ function useTournamentData() {
     setState(s => ({...s, ...patch}))
     await setDoc(doc(db, 'tournament', 'data'), patch, { merge:true })
   }
+  async function uploadMedia(file) {
+  if (!file) return;
+
+  const id = `${Date.now()}-${file.name}`;
+  const fileRef = ref(storage, `gallery/${id}`);
+
+  await uploadBytes(fileRef, file);
+  const url = await getDownloadURL(fileRef);
+
+  const item = {
+    id,
+    url,
+    type: file.type,
+    name: file.name,
+    createdAt: Date.now(),
+  };
+
+  await save({
+    gallery: {
+      ...(data.gallery || {}),
+      [id]: item,
+    },
+  });
+}
+  
+
+
 
   return { ...state, save }
 }
@@ -255,7 +285,12 @@ function App() {
       {view === 'players' && <Players players={data.players} board={board} playerHcp={data.playerHcp} updateHcp={updateHcp} admin={admin} />}
       {view === 'stats' && <Stats board={board} rounds={data.rounds} players={data.players} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} />}
       {view === 'chat' && <Chat players={data.players} identity={identity} />}
-      {view === 'gallery' && <Gallery gallery={data.gallery} rounds={data.rounds} courses={data.courses} />}
+      {view === "gallery" && (
+  <Gallery
+    gallery={data.gallery}
+    onUpload={uploadMedia}
+  />
+)}
     </main>
 
     <footer className="bottomNav"><Nav view={view} setView={setView} compact /></footer>
