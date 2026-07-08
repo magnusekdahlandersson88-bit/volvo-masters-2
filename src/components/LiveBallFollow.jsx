@@ -54,7 +54,7 @@ export default function LiveBallFollow({ rounds = [], courses = [], scores = {},
 })}
 <div className="liveStatus">
   <span className="dot"></span>
-  Uppdateras live
+  {maxHole >= 18 ? "Färdigspelad" : "Uppdateras live"}
 </div>
             </article>
           );
