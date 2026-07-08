@@ -233,7 +233,14 @@ function App() {
 
     <main className="content">
       <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
-      {view === 'home' && <Home board={board} nextRound={nextRound} nextCourse={nextCourse} setView={setView} />}
+      {view === 'home' && <Home
+  board={board}
+  nextRound={nextRound}
+  nextCourse={nextCourse}
+  setView={setView}
+  rounds={data.rounds}
+  setSelectedRound={setSelectedRound}
+/>}
       {view === 'leaderboard' && <Leaderboard board={board} />}
       {view === 'rounds' && <Rounds rounds={data.rounds} courses={data.courses} setView={setView} setSelectedRound={setSelectedRound} />}
       {view === 'score' && <BallScorecard admin={admin} identity={identity} updateIdentity={updateIdentity} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} selectedRound={selectedRound} setSelectedRound={setSelectedRound} updateHole={updateHole} updateHcp={updateHcp} />}
@@ -274,13 +281,17 @@ function Topbar({loading, admin, identity, clearIdentity}) {
   </header>
 }
 
-function Home({board, nextRound, nextCourse, setView}) {
+function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound}) {
+  function startScorecard() {
+  setSelectedRound(nextRound.slot)
+  setView('score')
+}
   return <section className="homeGrid">
     <div className="heroCard">
       <small>Nästa deltävling</small>
       <h2>{nextCourse.emoji} {nextCourse.name}</h2>
       <p>{nextRound.date || 'Datum kommer'} · Tee {nextCourse.tee} · Slope {nextCourse.slope}</p>
-      <div className="heroActions"><button onClick={() => setView('score')}>Starta scorekort</button><button className="ghost" onClick={() => setView('rounds')}>Visa rundor</button></div>
+      <div className="heroActions"><button onClick={startScorecard}>Starta scorekort</button><button className="ghost" onClick={() => setView('rounds')}>Visa rundor</button></div>
     </div>
     <Podium board={board} />
     <Metric title="Spelare" value="12" text="Volvo Masters-fält" />
