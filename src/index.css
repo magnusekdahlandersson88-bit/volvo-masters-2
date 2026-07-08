@@ -321,7 +321,7 @@ option { color: #071009; }
 
 .liveCards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
   gap: 24px;
 }
 
@@ -344,8 +344,8 @@ option { color: #071009; }
   padding: 12px 0;
   border-top: 1px solid rgba(255,255,255,.08);
 }
-.livePage {
-  padding-top: 28px;
+.livePage{
+  padding:40px;
 }
 
 .liveHero h1 {
@@ -391,4 +391,7 @@ option { color: #071009; }
 }
 .live-follow {
   max-width: none;
+}
+.liveCards {
+  justify-content: center;
 }
