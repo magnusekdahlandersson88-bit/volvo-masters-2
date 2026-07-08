@@ -237,6 +237,14 @@ function App() {
       {view === 'leaderboard' && <Leaderboard board={board} />}
       {view === 'rounds' && <Rounds rounds={data.rounds} courses={data.courses} setView={setView} setSelectedRound={setSelectedRound} />}
       {view === 'score' && <BallScorecard admin={admin} identity={identity} updateIdentity={updateIdentity} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} selectedRound={selectedRound} setSelectedRound={setSelectedRound} updateHole={updateHole} updateHcp={updateHcp} />}
+      {view === 'live' && (
+  <LiveBallFollow
+    rounds={data.rounds}
+    courses={data.courses}
+    scores={data.scores}
+    players={data.players}
+  />
+)}
       {view === 'players' && <Players players={data.players} board={board} playerHcp={data.playerHcp} updateHcp={updateHcp} admin={admin} />}
       {view === 'stats' && <Stats board={board} rounds={data.rounds} players={data.players} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} />}
       {view === 'chat' && <Chat players={data.players} identity={identity} />}
@@ -250,7 +258,7 @@ function App() {
 function Nav({view, setView, compact=false}) {
   const items = [
     ['home','⌂','Hem'], ['leaderboard','🏆','Leaderboard'], ['rounds','⛳','Rundor'], ['score','✍️','Score'],
-    ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'], ['gallery','🖼️','Galleri']
+    ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'],['live', '📡', 'Live'], ['gallery','🖼️','Galleri']
   ]
   return <nav className={compact ? 'nav compact' : 'nav'}>{items.map(([id, icon, label]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{!compact && label}</button>)}</nav>
 }
