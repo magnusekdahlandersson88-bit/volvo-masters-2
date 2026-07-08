@@ -164,7 +164,7 @@ function useTournamentData() {
 
 
 
-  return { ...state, save }
+  return { ...state, save, uploadMedia }
 }
 
 function courseFor(courses, round) {
@@ -227,6 +227,7 @@ function useLocalIdentity() {
 
 function App() {
   const data = useTournamentData()
+  const uploadMedia = data.uploadMedia
   const { identity, update: updateIdentity, clear: clearIdentity } = useLocalIdentity()
   const [view, setView] = useState('home')
   const [admin, setAdmin] = useState(false)
