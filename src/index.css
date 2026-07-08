@@ -309,3 +309,78 @@ option { color: #071009; }
     padding: 22px;
   }
 }
+.livePage {
+  padding: 32px;
+}
+
+.liveHero {
+  margin-bottom: 26px;
+}
+
+.liveCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.liveCard {
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.ball-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.livePlayer {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.livePage {
+  padding-top: 28px;
+}
+
+.liveHero h1 {
+  margin-top: 0;
+}
+.liveHero {
+  margin-bottom: 28px;
+}
+
+.liveHero h2 {
+  font-size: 42px;
+  margin: 8px 0;
+}
+
+.liveHero .eyebrow {
+  color: #d7b84a;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.liveHero span {
+  color: #9ca3af;
+}
+
+.liveCard {
+  background: #1a1a1a;
+  border: 1px solid #303030;
+  border-radius: 18px;
+  padding: 20px;
+  transition: 0.2s;
+}
+
+.liveCard:hover {
+  border-color: #d7b84a;
+}
+
+.ball-top b {
+  font-size: 20px;
+}
