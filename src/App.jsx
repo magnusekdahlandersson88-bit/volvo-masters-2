@@ -655,9 +655,6 @@ function Chat({players, identity}) {
   return <section className="chatPanel"><div className="panel messages"><h2>Chat</h2>{messages.slice(-40).map(m => <div className="msg" key={m.id}><b>{m.name}</b><p>{m.text}</p><small>{m.timeStr}</small></div>)}</div><div className="panel composer"><select value={name} onChange={e=>setName(e.target.value)}>{players.map(p=><option key={p}>{p}</option>)}</select><textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Skriv meddelande…"/><button onClick={send}>Skicka</button></div></section>
 }
 
-function Gallery({gallery, rounds, courses}) {
-  const imgs = rounds.flatMap(r => (gallery?.[r.slot] || []).map(img => ({...img, course:courseFor(courses,r).name})))
-  return <section className="cards">{imgs.length ? imgs.map((img,i)=><article className="galleryCard" key={i}><img src={img.url} /><b>{img.course}</b><p>{img.caption}</p></article>) : <div className="panel"><h2>Galleri</h2><p>Inga bilder ännu. Galleri är förberett för gamla appens dataformat.</p></div>}</section>
-}
+
 
 export default App
