@@ -155,7 +155,7 @@ function useTournamentData() {
 
   await save({
     gallery: {
-      ...(data.gallery || {}),
+      ...(state.gallery || {}),
       [id]: item,
     },
   });
