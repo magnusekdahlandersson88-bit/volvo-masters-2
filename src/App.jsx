@@ -6,6 +6,7 @@ import './index.css'
 import LiveBallFollow from "./components/LiveBallFollow";
 import LiveActivityFeed from "./components/LiveActivityFeed";
 import Gallery from "./components/Gallery";
+import { getMessaging, getToken } from "firebase/messaging";
 const firebaseConfig = {
   apiKey: 'AIzaSyBx8lrLzDWoYAonfiWMvOIpkkDqOo2LC88',
   authDomain: 'volvo-masters.firebaseapp.com',
@@ -18,6 +19,27 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 const storage = getStorage(app)
+const messaging = getMessaging(app)
+const VAPID_KEY = "BMJD9Wr_zDfFGIbAdSRqB39xtu93VvOl117StX3suiERk6l23O5uwW3lkkPtTwc5-h_oieWP5bheEhhBQtnnyk8";
+async function enableNotifications() {
+  try {
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+      alert("Notiser nekades");
+      return;
+    }
+
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+    });
+
+    console.log("FCM Token:", token);
+    alert("Notiser aktiverade!");
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 const ADMIN_PASSWORD = '340426'
 const DEFAULT_PAR = [4,3,5,4,4,3,5,4,4,4,3,5,4,4,3,5,4,4]
@@ -264,6 +286,9 @@ function App() {
     </aside>
 
     <main className="content">
+      <button onClick={enableNotifications} className="adminButton">
+  Aktivera notiser
+</button>
       <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
       {view === 'home' && <Home
   board={board}
