@@ -11,6 +11,9 @@ export default function Gallery({ gallery = {}, onUpload }) {
   })
   .filter(item => item && item.url)
   .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  function mediaUrl(item) {
+  return item.url || item.src || item.image || item.photo || item.href || "";
+}
 
   return (
     <section className="galleryPage">
