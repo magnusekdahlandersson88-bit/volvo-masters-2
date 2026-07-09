@@ -3,10 +3,13 @@ import { useState } from "react";
 export default function Gallery({ gallery = {}, onUpload }) {
   const [selected, setSelected] = useState(null);
   const items = Object.values(gallery || {})
-  .flatMap(item => Array.isArray(item) ? item : [item])
-  .filter(Boolean)
-  .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  .filter(Boolean)
+  .flatMap(item => {
+    if (Array.isArray(item)) return item;
+    if (item && typeof item === "object" && item.url) return [item];
+    if (item && typeof item === "object") return Object.values(item);
+    return [];
+  })
+  .filter(item => item && item.url)
   .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
   return (
