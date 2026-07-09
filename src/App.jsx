@@ -153,12 +153,13 @@ function useTournamentData() {
     createdAt: Date.now(),
   };
 
-  await save({
-    gallery: {
-      ...(state.gallery || {}),
-      [id]: item,
-    },
-  });
+  const currentGallery = Array.isArray(state.gallery)
+  ? state.gallery
+  : Object.values(state.gallery || {});
+
+await save({
+  gallery: [...currentGallery, item],
+});
 }
   
 

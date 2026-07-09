@@ -5,6 +5,9 @@ export default function Gallery({ gallery = {}, onUpload }) {
   const items = Object.values(gallery || {}).sort(
     (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
   );
+  function mediaUrl(item) {
+  return item.url || item.src || item.image || item.photo || item.href || item;
+}
 
   return (
     <section className="galleryPage">
@@ -46,7 +49,7 @@ export default function Gallery({ gallery = {}, onUpload }) {
               {item.type?.startsWith("video") ? (
                 <video src={item.url} muted playsInline />
               ) : (
-                <img src={item.url} alt={item.name || "Galleri"} />
+                <img src={mediaUrl(item)} alt={item.name || "Galleri"} />
               )}
               <span>{item.name || "Volvo Masters"}</span>
             </button>
