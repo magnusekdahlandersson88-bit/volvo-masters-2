@@ -2,7 +2,9 @@ import { useState } from "react";
 
 export default function Gallery({ gallery = {}, onUpload }) {
   const [selected, setSelected] = useState(null);
-  const items = Object.values(gallery || {}).sort(
+  const items = (
+  Array.isArray(gallery) ? gallery : Object.values(gallery || {})
+).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
   );
   function mediaUrl(item) {
