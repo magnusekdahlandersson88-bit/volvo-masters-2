@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { initializeApp } from 'firebase/app'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, query, orderBy } from 'firebase/firestore'
+import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc } from "firebase/firestore";
 import './index.css'
 import LiveBallFollow from "./components/LiveBallFollow";
 import LiveActivityFeed from "./components/LiveActivityFeed";
@@ -35,10 +35,17 @@ async function enableNotifications() {
     });
 
     console.log("FCM Token:", token);
-    alert("Notiser aktiverade!");
-  } catch (err) {
-    console.error(err);
-  }
+
+await setDoc(doc(db, "pushTokens", token), {
+  token,
+  createdAt: Date.now(),
+  userAgent: navigator.userAgent,
+});
+
+alert("Notiser aktiverade!");
+} catch (err) {
+  console.error(err);
+}
 }
 
 const ADMIN_PASSWORD = '340426'
@@ -255,6 +262,9 @@ function App() {
   const [view, setView] = useState('home')
   const [admin, setAdmin] = useState(false)
   const [selectedRound, setSelectedRound] = useState(1)
+  useEffect(() => {
+  enableNotifications();
+}, []);
   const board = useMemo(() => leaderboard(data.players, data.rounds, data.courses, data.scores, data.playerHcp), [data.players, data.rounds, data.courses, data.scores, data.playerHcp])
   const nextRound = data.rounds.find(r => !data.players.some(p => playerRoundResult(p, r, data.courses, data.scores, data.playerHcp).played > 0)) || data.rounds[0]
   const nextCourse = courseFor(data.courses, nextRound)
