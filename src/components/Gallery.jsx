@@ -2,14 +2,14 @@ import { useState } from "react";
 
 export default function Gallery({ gallery = {}, onUpload }) {
   const [selected, setSelected] = useState(null);
-  const items = (
-  Array.isArray(gallery) ? gallery : Object.values(gallery || {})
-).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
-  );
-  function mediaUrl(item) {
-  return item.url || item.src || item.image || item.photo || item.href || item;
-}
+  const items = Object.values(gallery || {})
+  .flatMap(item => {
+    if (Array.isArray(item)) return item;
+    if (item && typeof item === "object" && !item.url) return Object.values(item);
+    return item;
+  })
+  .filter(Boolean)
+  .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
   return (
     <section className="galleryPage">
