@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { initializeApp } from 'firebase/app'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc } from "firebase/firestore";
+import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc ,query,
+orderBy,} from "firebase/firestore";
 import './index.css'
 import LiveBallFollow from "./components/LiveBallFollow";
 import LiveActivityFeed from "./components/LiveActivityFeed";
@@ -718,7 +719,7 @@ function Chat({players, identity}) {
     await addDoc(collection(db,'chat'), { name, text:text.trim(), time:Date.now(), timeStr:new Date().toLocaleString('sv-SE') })
     setText('')
   }
-  return <section className="chatPanel"><div className="panel messages"><h2>Chat</h2>{messages.slice(-40).map(m => <div className="msg" key={m.id}><b>{m.name}</b><p>{m.text}</p><small>{m.timeStr}</small></div>)}</div><div className="panel composer"><select value={name} onChange={e=>setName(e.target.value)}>{data.players.map(p=><option key={p}>{p}</option>)}</select><textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Skriv meddelande…"/><button onClick={send}>Skicka</button></div></section>
+  return <section className="chatPanel"><div className="panel messages"><h2>Chat</h2>{messages.slice(-40).map(m => <div className="msg" key={m.id}><b>{m.name}</b><p>{m.text}</p><small>{m.timeStr}</small></div>)}</div><div className="panel composer"><select value={name} onChange={e=>setName(e.target.value)}>{players.map(p => <option key={p}>{p}</option>)}</select><textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Skriv meddelande…"/><button onClick={send}>Skicka</button></div></section>
 }
 
 
