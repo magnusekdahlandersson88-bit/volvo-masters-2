@@ -236,9 +236,19 @@ function playerRoundResult(player, round, courses, scores, playerHcp) {
 function leaderboard(players, rounds, courses, scores, playerHcp) {
   return players.map(player => {
     const results = rounds.map(r => playerRoundResult(player, r, courses, scores, playerHcp)).filter(r => r.played > 0)
+    const totalGross = results.reduce((sum, r) => sum + (r.strokes || 0), 0)
+const totalRawPoints = results.reduce((sum, r) => sum + (r.points || 0), 0)
     const best = [...results].sort((a,b) => b.adj - a.adj).slice(0,4)
     const total = Math.round(best.reduce((s,r) => s + r.adj, 0) * 10) / 10
-    return { player, total, rounds: results.length, best, latest: results.at(-1) }
+    return {
+  player,
+  total,
+  rounds: results.length,
+  best,
+  latest: results[results.length - 1],
+  totalGross,
+  totalRawPoints
+}
   }).sort((a,b) => b.total - a.total || b.rounds - a.rounds)
 }
 
@@ -391,7 +401,10 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound})
 
 function Podium({board}) {
   const top = board.slice(0,3)
-  return <div className="panel podium"><h3>Topp 3 totalt</h3>{top.map((p,i) => <div className="podiumRow" key={p.player}><span>{['🥇','🥈','🥉'][i]}</span><b>{p.player}</b><strong>{p.total}p</strong></div>)}</div>
+  return <div className="panel podium"><h3>Topp 3 totalt</h3>{top.map((p,i) => <div className="podiumRow" key={p.player}><span>{['🥇','🥈','🥉'][i]}</span><b>{p.player}</b>
+<strong>{p.total}p</strong>
+<small>Brutto: {p.totalGross} slag</small>
+<small>Råpoäng: {p.totalRawPoints} p</small></div>)}</div>
 }
 
 function Metric({title,value,text}) {
