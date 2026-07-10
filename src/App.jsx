@@ -42,7 +42,11 @@ await setDoc(doc(db, "pushTokens", token), {
   userAgent: navigator.userAgent,
 });
 
-alert("Notiser aktiverade!");
+await setDoc(doc(db, "pushTokens", token), {
+  token,
+  createdAt: Date.now(),
+  userAgent: navigator.userAgent,
+});
 } catch (err) {
   console.error(err);
 }
@@ -261,10 +265,17 @@ function App() {
   const { identity, update: updateIdentity, clear: clearIdentity } = useLocalIdentity()
   const [view, setView] = useState('home')
   const [admin, setAdmin] = useState(false)
-  const [selectedRound, setSelectedRound] = useState(1)
-  useEffect(() => {
-  enableNotifications();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+  Notification.permission === "granted"
+);
+
+useEffect(() => {
+  if (Notification.permission === "granted") {
+    setNotificationsEnabled(true);
+  }
 }, []);
+  const [selectedRound, setSelectedRound] = useState(1)
+  
   const board = useMemo(() => leaderboard(data.players, data.rounds, data.courses, data.scores, data.playerHcp), [data.players, data.rounds, data.courses, data.scores, data.playerHcp])
   const nextRound = data.rounds.find(r => !data.players.some(p => playerRoundResult(p, r, data.courses, data.scores, data.playerHcp).played > 0)) || data.rounds[0]
   const nextCourse = courseFor(data.courses, nextRound)
@@ -296,9 +307,14 @@ function App() {
     </aside>
 
     <main className="content">
-      <button onClick={enableNotifications} className="adminButton">
-  Aktivera notiser
-</button>
+      {!notificationsEnabled && (
+  <button
+    onClick={enableNotifications}
+    className="adminButton"
+  >
+    Aktivera notiser
+  </button>
+)}
       <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
       {view === 'home' && <Home
   board={board}
