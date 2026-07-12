@@ -362,11 +362,16 @@ useEffect(() => {
 }
 
 function Nav({view, setView, compact=false}) {
-  const items = [
+  const allItems = [
     ['home','⌂','Hem'], ['leaderboard','🏆','Leaderboard'], ['rounds','⛳','Rundor'], ['score','✍️','Score'],
     ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'],['live', '📡', 'Live'], ['gallery','🖼️','Galleri']
   ]
-  return <nav className={compact ? 'nav compact' : 'nav'}>{items.map(([id, icon, label]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{!compact && label}</button>)}</nav>
+  const mobileItems = allItems.filter(([id]) =>
+  ['home', 'leaderboard', 'rounds', 'score', 'players', 'stats', 'chat'].includes(id)
+)
+
+const visibleItems = compact ? mobileItems : allItems
+  return <nav className={compact ? 'nav compact' : 'nav'}>{visibleItems.map(([id, icon, label]) =>  <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{!compact && label}</button>)}</nav>
 }
 
 function Topbar({loading, admin, identity, clearIdentity}) {
