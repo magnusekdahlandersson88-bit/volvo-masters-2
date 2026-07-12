@@ -364,7 +364,7 @@ useEffect(() => {
 function Nav({view, setView, compact=false}) {
   const items = [
     ['home','⌂','Hem'], ['leaderboard','🏆','Leaderboard'], ['rounds','⛳','Rundor'], ['score','✍️','Score'],
-    ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'],['live', '📡', 'Live'], ['gallery','🖼️','Galleri']['admin', '⚙️', 'Admin']
+    ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'],['live', '📡', 'Live'], ['gallery','🖼️','Galleri']
   ]
   return <nav className={compact ? 'nav compact' : 'nav'}>{items.map(([id, icon, label]) => <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{!compact && label}</button>)}</nav>
 }
