@@ -357,21 +357,33 @@ useEffect(() => {
 )}
     </main>
 
-    <footer className="bottomNav"><Nav view={view} setView={setView} compact /></footer>
+    <footer className="bottomNav">
+  <Nav
+    view={view}
+    setView={setView}
+    compact
+    onAdmin={login}
+  />
+</footer>
   </div>
 }
 
-function Nav({view, setView, compact=false}) {
+function Nav({ view, setView, compact=false, onAdmin }) {
   const allItems = [
     ['home','⌂','Hem'], ['leaderboard','🏆','Leaderboard'], ['rounds','⛳','Rundor'], ['score','✍️','Score'],
-    ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'],['live', '📡', 'Live'], ['gallery','🖼️','Galleri']
+    ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'],['live', '📡', 'Live'], ['gallery','🖼️','Galleri'], ['admin', '⚙️', 'Admin']
   ]
-  const mobileItems = allItems.filter(([id]) =>
-  ['home', 'leaderboard', 'rounds', 'score', 'players', 'stats', 'chat'].includes(id)
-)
+  
 
-const visibleItems = compact ? mobileItems : allItems
-  return <nav className={compact ? 'nav compact' : 'nav'}>{visibleItems.map(([id, icon, label]) =>  <button key={id} className={view === id ? 'active' : ''} onClick={() => setView(id)}><span>{icon}</span>{!compact && label}</button>)}</nav>
+
+const visibleItems = allItems
+  return <nav className={compact ? 'nav compact' : 'nav'}>{visibleItems.map(([id, icon, label]) =>  <button key={id} className={view === id ? 'active' : ''} onClick={() => {
+  if (id === 'admin') {
+    onAdmin()
+  } else {
+    setView(id)
+  }
+}}><span>{icon}</span>{!compact && label}</button>)}</nav>
 }
 
 function Topbar({loading, admin, identity, clearIdentity}) {
