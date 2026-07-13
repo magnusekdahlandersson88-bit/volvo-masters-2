@@ -386,16 +386,41 @@ const visibleItems = allItems
 }}><span>{icon}</span>{!compact && label}</button>)}</nav>
 }
 
-function Topbar({loading, admin, identity, clearIdentity}) {
-  return <header className="topbar">
-    <div><small>Live från Firebase</small><h1>Volvo Masters 2026</h1></div>
-    <div className="pills">
-      {identity?.marker && <button className="identityPill" onClick={clearIdentity}>Markör: {identity.marker}</button>}
-      <span>{loading ? 'Synkar…' : 'Synkad'}</span>
-      {admin && <b>Admin aktiv</b>}
-    </div>
-  </header>
+function Topbar({ loading, admin, identity, clearIdentity }) {
+  return (
+    <header className="topbar brandTopbar">
+      <div className="brandIdentity">
+        <img
+          className="brandLogo"
+          src="/branding/vm-logo.png"
+          alt="Volvo Masters"
+        />
+
+        <div className="brandText">
+          <small>Live från Firebase</small>
+          <h1>Volvo Masters</h1>
+        </div>
+      </div>
+
+      <div className="pills">
+        {identity?.marker && (
+          <button
+            className="identityPill"
+            onClick={clearIdentity}
+          >
+            Markör: {identity.marker}
+          </button>
+        )}
+
+        <span>{loading ? 'Synkar…' : 'Synkad'}</span>
+
+        {admin && <b>Admin aktiv</b>}
+      </div>
+    </header>
+  )
 }
+  
+
 
 function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound}) {
   function startScorecard() {

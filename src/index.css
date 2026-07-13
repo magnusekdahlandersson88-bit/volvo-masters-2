@@ -813,4 +813,142 @@ option { color: #071009; }
   .roundImageTitle h3 {
     font-size: 26px;
   }
+}:root {
+  --vm-green-dark: #03130c;
+  --vm-green: #082619;
+  --vm-green-soft: #123a29;
+  --vm-gold: #d4af4c;
+  --vm-gold-light: #f0d985;
+  --vm-cream: #f7f2df;
+  --vm-muted: #aaa99f;
+  --vm-line: rgba(212, 175, 76, 0.18);
+}
+
+body {
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(23, 78, 51, 0.38),
+      transparent 36%
+    ),
+    linear-gradient(
+      160deg,
+      #020906 0%,
+      var(--vm-green-dark) 45%,
+      #071a11 100%
+    );
+  color: var(--vm-cream);
+}
+
+.brandTopbar {
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--vm-line);
+  background: rgba(2, 12, 7, 0.74);
+  backdrop-filter: blur(18px);
+}
+
+.brandIdentity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brandLogo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 8px 22px rgba(212, 175, 76, 0.2));
+}
+
+.brandText small {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--vm-muted);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.brandText h1 {
+  margin: 0;
+  color: var(--vm-cream);
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.panel,
+.roundCard,
+.heroCard,
+.metric,
+.cards article {
+  border: 1px solid var(--vm-line);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(11, 38, 25, 0.88),
+      rgba(3, 17, 10, 0.96)
+    );
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+button {
+  border: 1px solid rgba(212, 175, 76, 0.26);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(212, 175, 76, 0.2),
+      rgba(89, 64, 14, 0.18)
+    );
+  color: var(--vm-cream);
+  font-weight: 700;
+}
+
+button:hover {
+  border-color: rgba(240, 217, 133, 0.55);
+  box-shadow: 0 8px 25px rgba(212, 175, 76, 0.12);
+}
+
+button.active {
+  border-color: var(--vm-gold);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(212, 175, 76, 0.28),
+      rgba(212, 175, 76, 0.1)
+    );
+  color: var(--vm-gold-light);
+}
+
+h1,
+h2,
+h3,
+strong {
+  text-wrap: balance;
+}
+
+@media (max-width: 700px) {
+  .brandTopbar {
+    padding: 18px 18px 14px;
+  }
+
+  .brandLogo {
+    width: 58px;
+    height: 58px;
+  }
+
+  .brandText h1 {
+    font-size: 30px;
+  }
+
+  .brandText small {
+    font-size: 10px;
+  }
+
+  .brandTopbar .pills {
+    display: none;
+  }
 }
