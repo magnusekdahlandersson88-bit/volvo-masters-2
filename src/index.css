@@ -711,4 +711,106 @@ option { color: #071009; }
     height: 58px !important;
     padding: 8px !important;
   }
+}.roundCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.roundCard {
+  overflow: hidden;
+  padding: 0;
+  border-radius: 28px;
+}
+
+.roundImageWrap {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+}
+
+.roundImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.roundCard:hover .roundImage {
+  transform: scale(1.035);
+}
+
+.roundImageShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.05),
+    rgba(0, 0, 0, 0.82)
+  );
+}
+
+.roundImageTitle {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 20px;
+  z-index: 2;
+  color: white;
+}
+
+.roundImageTitle small {
+  display: block;
+  margin-bottom: 6px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.roundImageTitle h3 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.roundCardBody {
+  padding: 20px;
+}
+
+.roundMeta {
+  margin: 0 0 16px;
+  opacity: 0.8;
+}
+
+.roundGroups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.roundGroups span {
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.roundCardBody button {
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .roundCards {
+    grid-template-columns: 1fr;
+  }
+
+  .roundImageWrap {
+    height: 220px;
+  }
+
+  .roundImageTitle h3 {
+    font-size: 26px;
+  }
 }

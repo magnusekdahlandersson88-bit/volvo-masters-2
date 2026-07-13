@@ -469,13 +469,90 @@ function Leaderboard({ board }) {
     </section>
   );
 }
+const COURSE_IMAGES = {
+  billingen: '/courses/billingen.jpg',
+  breviken: '/courses/breviken.jpg',
+  knistad: '/courses/knistad.jpg',
+  lacko: '/courses/lacko.jpg',
+  mariestad: '/courses/mariestad.jpg',
+  skovde: '/courses/skovde.jpg',
+}
 
-function Rounds({rounds, courses, setView, setSelectedRound}) {
-  return <section className="cards">{rounds.map(r => {
-    const c = courseFor(courses, r)
-    const groups = r.groups || []
-    return <article className="roundCard" key={r.slot}><div className="courseArt">{c.emoji}</div><small>Rond {r.slot}</small><h3>{c.name}</h3><p>{r.date || 'Datum kommer'} · {c.location}</p><div className="roundMeta"><span>Par {c.par}</span><span>Slope {c.slope}</span><span>Tee {c.tee}</span><span>{groups.length || 3} bollar</span></div><button onClick={() => { setSelectedRound(r.slot); setView('score') }}>Öppna score</button></article>
-  })}</section>
+function getCourseImage(course) {
+  const name = String(course?.name || '').toLowerCase()
+
+  if (name.includes('billingen')) return COURSE_IMAGES.billingen
+  if (name.includes('breviken')) return COURSE_IMAGES.breviken
+  if (name.includes('knistad')) return COURSE_IMAGES.knistad
+  if (name.includes('läckö') || name.includes('lacko')) {
+    return COURSE_IMAGES.lacko
+  }
+  if (name.includes('mariestad')) return COURSE_IMAGES.mariestad
+  if (name.includes('skövde') || name.includes('skovde')) {
+    return COURSE_IMAGES.skovde
+  }
+
+  return COURSE_IMAGES.skovde
+}
+function Rounds({ rounds, courses, setView, setSelectedRound }) {
+  return (
+    <section className="cards roundCards">
+      {rounds.map((r) => {
+        const c = courseFor(courses, r)
+        const groups = r.groups || []
+        const image = getCourseImage(c)
+
+        return (
+          <article className="roundCard" key={r.slot}>
+            <div className="roundImageWrap">
+              <img
+                className="roundImage"
+                src={image}
+                alt={c?.name || 'Golfbana'}
+              />
+
+              <div className="roundImageShade" />
+
+              <div className="roundImageTitle">
+                <small>Deltävling {r.slot}</small>
+                <h3>
+                  {c?.emoji || '⛳'} {c?.name || 'Golfbana'}
+                </h3>
+              </div>
+            </div>
+
+            <div className="roundCardBody">
+              <p className="roundMeta">
+                {r.date || 'Datum kommer'}
+                {c?.tee ? ` · Tee ${c.tee}` : ''}
+                {c?.slope ? ` · Slope ${c.slope}` : ''}
+              </p>
+
+              {groups.length > 0 && (
+                <div className="roundGroups">
+                  {groups.map((group, index) => (
+                    <span key={group.id || index}>
+                      Grupp {index + 1}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedRound(r.slot)
+                  setView('score')
+                }}
+              >
+                Öppna scorekort
+              </button>
+            </div>
+          </article>
+        )
+      })}
+    </section>
+  )
 }
 
 function BallScorecard({admin, identity, updateIdentity, players, rounds, courses, scores, playerHcp, selectedRound, setSelectedRound, updateHole, updateHcp}) {
