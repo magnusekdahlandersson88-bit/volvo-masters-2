@@ -390,6 +390,13 @@ function Topbar({ loading, admin, identity, clearIdentity }) {
   return (
     <header className="topbar brandTopbar">
       <div className="brandIdentity">
+  <img
+    src="/branding/vm-logo.png"
+    alt="Volvo Masters"
+    className="brandLogo"
+  />
+</div>
+      <div className="brandIdentity">
         <img
           className="brandLogo"
           src="/branding/vm-logo.png"

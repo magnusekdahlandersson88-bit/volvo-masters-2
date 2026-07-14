@@ -972,4 +972,20 @@ body {
 
 img {
   max-width: 100%;
+}.brandTopbar{
+  background:#07160f;
+  border-bottom:1px solid rgba(212,175,55,.25);
+}
+
+.brandIdentity{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+}
+
+.brandLogo{
+  height:56px;
+  width:auto;
+  display:block;
 }
