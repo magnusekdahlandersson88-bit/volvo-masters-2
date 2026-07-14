@@ -951,4 +951,25 @@ strong {
   .brandTopbar .pills {
     display: none;
   }
+}html {
+  width: 100%;
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-width: 0;
+}
+
+img {
+  max-width: 100%;
 }
