@@ -437,7 +437,7 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound})
         backgroundImage: `linear-gradient(
           rgba(3, 19, 12, 0.35),
           rgba(3, 19, 12, 0.82)
-        ), url(${COURSE_IMAGES[
+        ), url(${COURSE_IMAGES[courseKey]})'
   nextCourse.name
     .toLowerCase()
     .replace(" gk", "")
