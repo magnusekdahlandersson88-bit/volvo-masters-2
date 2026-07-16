@@ -429,32 +429,52 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound})
   setSelectedRound(nextRound.slot)
   setView('score')
 }
-  return <section className="homeGrid">
-    <div className="heroCard">
+ return (
+  <section className="homeGrid">
+    <div
+      className="heroCard"
+      style={{
+        backgroundImage: `linear-gradient(
+          rgba(3, 19, 12, 0.35),
+          rgba(3, 19, 12, 0.82)
+        ), url(${COURSE_IMAGES[
+  nextCourse.name
+    .toLowerCase()
+    .replace(" gk", "")
+    .replace("ä", "a")
+    .replace("ö", "o")
+    .replace("å", "a")
+]})`
+      }}
+    >
       <small>Nästa deltävling</small>
-      <h2>{nextCourse.emoji} {nextCourse.name}</h2>
-      <p>{nextRound.date || 'Datum kommer'} · Tee {nextCourse.tee} · Slope {nextCourse.slope}</p>
-      <div className="heroActions"><button onClick={startScorecard}>Starta scorekort</button><button className="ghost" onClick={() => setView('rounds')}>Visa rundor</button></div>
+
+      <h2>
+        {nextCourse.emoji} {nextCourse.name}
+      </h2>
+
+      <p>
+        {nextRound.date || "Datum kommer"} · Tee {nextCourse.tee} · Slope{" "}
+        {nextCourse.slope}
+      </p>
+
+      <div className="heroActions">
+        <button onClick={startScorecard}>Starta scorekort</button>
+        <button onClick={() => setView("rounds")}>Visa rundor</button>
+      </div>
     </div>
+
     <Podium board={board} />
     <Metric title="Spelare" value="12" text="Volvo Masters-fält" />
     <Metric title="Deltävlingar" value="6" text="Bästa 4 räknas" />
-    <Metric title="Stableford" value="36" text="Målet per runda" />
-    <div className="panel wide"><h3>Snabbval</h3><div className="quickGrid"><button onClick={()=>setView('leaderboard')}>🏆 Leaderboard</button><button onClick={()=>setView('score')}>✍️ Fyll score</button><button onClick={()=>setView('chat')}>💬 Chat</button><button onClick={()=>setView('stats')}>📊 Statistik</button></div></div>
   </section>
-}
-
-function Podium({board}) {
-  const top = board.slice(0,3)
-  return <div className="panel podium"><h3>Topp 3 totalt</h3>{top.map((p,i) => <div className="podiumRow" key={p.player}><span>{['🥇','🥈','🥉'][i]}</span><b>{p.player}</b>
-<strong>{p.total}p</strong>
-<small>Brutto: {p.totalGross} slag</small>
-<small>Råpoäng: {p.totalRawPoints} p</small></div>)}</div>
+)
 }
 
 function Metric({title,value,text}) {
   return <div className="metric"><small>{title}</small><strong>{value}</strong><span>{text}</span></div>
 }
+
 
 function Leaderboard({ board }) {
   return (
