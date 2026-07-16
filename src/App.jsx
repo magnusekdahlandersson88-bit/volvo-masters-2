@@ -464,7 +464,7 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound})
       </div>
     </div>
 
-    <Podium board={board} />
+    <Leaderboard board={board} />
     <Metric title="Spelare" value="12" text="Volvo Masters-fält" />
     <Metric title="Deltävlingar" value="6" text="Bästa 4 räknas" />
   </section>
