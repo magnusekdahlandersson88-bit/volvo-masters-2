@@ -464,7 +464,8 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound})
       </div>
     </div>
 
-    <Leaderboard board={board} />
+<Podium board={board} />
+    
     <Metric title="Spelare" value="12" text="Volvo Masters-fält" />
     <Metric title="Deltävlingar" value="6" text="Bästa 4 räknas" />
   </section>
@@ -473,6 +474,27 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound})
 
 function Metric({title,value,text}) {
   return <div className="metric"><small>{title}</small><strong>{value}</strong><span>{text}</span></div>
+}
+function Podium({ board }) {
+  const topThree = board.slice(0, 3)
+
+  return (
+    <div className="podium">
+      <h3>Topp 3 totalt</h3>
+
+      {topThree.map((p, i) => (
+        <div className="podiumRow" key={p.player}>
+          <span>{["🥇", "🥈", "🥉"][i]}</span>
+
+          <div>
+            <b>{p.player}</b>
+          </div>
+
+          <strong>{p.total}p</strong>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 
