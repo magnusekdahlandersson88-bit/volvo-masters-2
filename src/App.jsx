@@ -238,7 +238,9 @@ function leaderboard(players, rounds, courses, scores, playerHcp) {
   return players.map(player => {
     const results = rounds.map(r => playerRoundResult(player, r, courses, scores, playerHcp)).filter(r => r.played > 0)
     const totalGross = results.reduce((sum, r) => sum + (r.strokes || 0), 0)
-const totalRawPoints = results.reduce((sum, r) => sum + (r.points || 0), 0)
+    const totalNet = Math.round(results.reduce((sum, r) => sum + (r.net || 0), 0) * 10) / 10
+    const totalRawPoints = results.reduce((sum, r) => sum + (r.points || 0), 0)
+    const bestFourPoints = [...results].sort((a, b) => b.points - a.points).slice(0, 4).reduce((sum, r) => sum + r.points, 0)
     const best = [...results].sort((a,b) => b.adj - a.adj).slice(0,4)
     const total = Math.round(best.reduce((s,r) => s + r.adj, 0) * 10) / 10
     return {
@@ -248,7 +250,9 @@ const totalRawPoints = results.reduce((sum, r) => sum + (r.points || 0), 0)
   best,
   latest: results[results.length - 1],
   totalGross,
-  totalRawPoints
+  totalNet,
+  totalRawPoints,
+  bestFourPoints
 }
   }).sort((a,b) => b.total - a.total || b.rounds - a.rounds)
 }
@@ -336,7 +340,17 @@ useEffect(() => {
   setSelectedRound={setSelectedRound}
 />}
       {view === 'leaderboard' && <Leaderboard board={board} />}
-      {view === 'rounds' && <Rounds rounds={data.rounds} courses={data.courses} setView={setView} setSelectedRound={setSelectedRound} />}
+      {view === 'rounds' && <Rounds
+        rounds={data.rounds}
+        courses={data.courses}
+        players={data.players}
+        scores={data.scores}
+        playerHcp={data.playerHcp}
+        admin={admin}
+        saveRounds={(rounds) => data.save({ rounds })}
+        setView={setView}
+        setSelectedRound={setSelectedRound}
+      />}
       {view === 'score' && <BallScorecard admin={admin} identity={identity} updateIdentity={updateIdentity} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} selectedRound={selectedRound} setSelectedRound={setSelectedRound} updateHole={updateHole} updateHcp={updateHcp} />}
       {view === 'live' && (
   <LiveBallFollow
@@ -563,63 +577,124 @@ function getCourseImage(course) {
 
   return COURSE_IMAGES.skovde
 }
-function Rounds({ rounds, courses, setView, setSelectedRound }) {
+function PlayerRoundScorecard({ result, round, onClose }) {
+  const front = result.holeBreakdown.slice(0, 9)
+  const back = result.holeBreakdown.slice(9)
+  const sum = (rows, field) => rows.reduce((total, row) => total + (Number(row[field]) || 0), 0)
   return (
-    <section className="cards roundCards">
-      {rounds.map((r) => {
-        const c = courseFor(courses, r)
-        const groups = r.groups || []
-        const image = getCourseImage(c)
+    <div className="scorecardModal" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="scorecardDialog" onClick={(event) => event.stopPropagation()}>
+        <div className="sectionHead">
+          <div><small>Rond {round.slot} · {round.date || 'Datum kommer'}</small><h2>{result.player}</h2><span>{result.course.name} · Spel-HCP {result.playing}</span></div>
+          <button type="button" className="ghost" onClick={onClose}>✕ Stäng</button>
+        </div>
+        <div className="scorecardSummary">
+          <div><small>Brutto</small><strong>{result.strokes || '—'}</strong></div>
+          <div><small>Netto</small><strong>{result.net || '—'}</strong></div>
+          <div><small>Poäng</small><strong>{result.points}p</strong></div>
+          <div><small>Spelade hål</small><strong>{result.played}/18</strong></div>
+        </div>
+        <div className="playerScoreTableWrap">
+          <table className="playerScoreTable">
+            <thead><tr><th>Hål</th>{result.holeBreakdown.map((h) => <th key={h.hole}>{h.hole}</th>)}<th>Ut</th><th>In</th><th>Tot</th></tr></thead>
+            <tbody>
+              <tr><th>Par</th>{result.holeBreakdown.map((h) => <td key={h.hole}>{h.par}</td>)}<td>{sum(front, 'par')}</td><td>{sum(back, 'par')}</td><td>{sum(result.holeBreakdown, 'par')}</td></tr>
+              <tr><th>Index</th>{result.holeBreakdown.map((h) => <td key={h.hole}>{h.si}</td>)}<td>—</td><td>—</td><td>—</td></tr>
+              <tr><th>Slag</th>{result.holeBreakdown.map((h) => <td key={h.hole}>{h.strokes || '—'}</td>)}<td>{sum(front, 'strokes') || '—'}</td><td>{sum(back, 'strokes') || '—'}</td><td>{result.strokes || '—'}</td></tr>
+              <tr><th>Poäng</th>{result.holeBreakdown.map((h) => <td key={h.hole}>{h.pts ?? '—'}</td>)}<td>{sum(front, 'pts')}</td><td>{sum(back, 'pts')}</td><td>{result.points}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-        return (
-          <article className="roundCard" key={r.slot}>
-            <div className="roundImageWrap">
-              <img
-                className="roundImage"
-                src={image}
-                alt={c?.name || 'Golfbana'}
-              />
-
-              <div className="roundImageShade" />
-
-              <div className="roundImageTitle">
-                <small>Deltävling {r.slot}</small>
-                <h3>
-                  {c?.emoji || '⛳'} {c?.name || 'Golfbana'}
-                </h3>
+function RoundGroupsEditor({ round, players, onChange }) {
+  const groups = round.groups?.length ? round.groups : chunkPlayers(players)
+  const usedPlayers = new Set(groups.flatMap((group) => group.players || []).filter(Boolean))
+  function updateGroup(groupIndex, patch) {
+    onChange({ ...round, groups: groups.map((group, index) => index === groupIndex ? { ...group, ...patch } : group) })
+  }
+  function updatePlayer(groupIndex, playerIndex, player) {
+    const nextPlayers = [...(groups[groupIndex].players || [])]
+    if (player) nextPlayers[playerIndex] = player
+    else nextPlayers.splice(playerIndex, 1)
+    updateGroup(groupIndex, { players: nextPlayers })
+  }
+  function addGroup() {
+    const nextId = Math.max(0, ...groups.map((group) => Number(group.id) || 0)) + 1
+    onChange({ ...round, groups: [...groups, { id: nextId, name: `Boll ${groups.length + 1}`, players: [] }], teeTimes: { ...(round.teeTimes || {}), [nextId]: '' } })
+  }
+  return (
+    <div className="groupEditor">
+      {groups.map((group, groupIndex) => (
+        <div className="groupEditorCard" key={group.id || groupIndex}>
+          <div className="groupEditorHead">
+            <input value={group.name || ''} onChange={(event) => updateGroup(groupIndex, { name: event.target.value })} aria-label="Bollnamn" />
+            <input value={round.teeTimes?.[group.id] || ''} onChange={(event) => onChange({ ...round, teeTimes: { ...(round.teeTimes || {}), [group.id]: event.target.value } })} placeholder="Starttid" aria-label="Starttid" />
+            <button type="button" className="ghost danger" disabled={groups.length <= 1} onClick={() => onChange({ ...round, groups: groups.filter((_, index) => index !== groupIndex) })}>Ta bort boll</button>
+          </div>
+          <div className="groupPlayerEditors">
+            {(group.players || []).map((player, playerIndex) => (
+              <div className="groupPlayerEditor" key={`${group.id}-${playerIndex}`}>
+                <select value={player} onChange={(event) => updatePlayer(groupIndex, playerIndex, event.target.value)}>
+                  <option value="">Välj spelare</option>
+                  {players.map((candidate) => <option key={candidate} value={candidate} disabled={candidate !== player && usedPlayers.has(candidate)}>{candidate}</option>)}
+                </select>
+                <button type="button" className="ghost" onClick={() => updatePlayer(groupIndex, playerIndex, '')}>Ta bort</button>
               </div>
-            </div>
+            ))}
+            <button type="button" className="ghost" onClick={() => updateGroup(groupIndex, { players: [...(group.players || []), ''] })}>+ Lägg till spelare</button>
+          </div>
+        </div>
+      ))}
+      <button type="button" onClick={addGroup}>+ Skapa ny boll</button>
+    </div>
+  )
+}
 
-            <div className="roundCardBody">
-              <p className="roundMeta">
-                {r.date || 'Datum kommer'}
-                {c?.tee ? ` · Tee ${c.tee}` : ''}
-                {c?.slope ? ` · Slope ${c.slope}` : ''}
-              </p>
-
-              {groups.length > 0 && (
-                <div className="roundGroups">
-                  {groups.map((group, index) => (
-                    <span key={group.id || index}>
-                      Grupp {index + 1}
-                    </span>
-                  ))}
+function Rounds({ rounds, courses, players, scores, playerHcp, admin, saveRounds, setView, setSelectedRound }) {
+  const [openRound, setOpenRound] = useState(null)
+  const [selectedScorecard, setSelectedScorecard] = useState(null)
+  const [editingRound, setEditingRound] = useState(null)
+  const [saving, setSaving] = useState(false)
+  async function saveRoundChanges() {
+    if (!editingRound) return
+    setSaving(true)
+    try {
+      await saveRounds(rounds.map((round) => round.slot === editingRound.slot ? editingRound : round))
+      setEditingRound(null)
+    } finally { setSaving(false) }
+  }
+  return (
+    <section className="roundsPage">
+      <div className="sectionHead"><div><h2>Deltävlingar</h2><span>Resultat, individuella scorekort och bollar</span></div></div>
+      <div className="cards roundCards">
+        {rounds.map((r) => {
+          const c = courseFor(courses, r)
+          const groups = r.groups || []
+          const results = players.map((player) => playerRoundResult(player, r, courses, scores, playerHcp)).filter((result) => result.played > 0).sort((a, b) => b.points - a.points || a.strokes - b.strokes)
+          const isOpen = openRound === r.slot
+          return (
+            <article className="roundCard" key={r.slot}>
+              <div className="roundImageWrap"><img className="roundImage" src={getCourseImage(c)} alt={c?.name || 'Golfbana'} /><div className="roundImageShade" /><div className="roundImageTitle"><small>Deltävling {r.slot}</small><h3>{c?.emoji || '⛳'} {c?.name || 'Golfbana'}</h3></div></div>
+              <div className="roundCardBody">
+                <p className="roundMeta">{r.date || 'Datum kommer'}{c?.tee ? ` · Tee ${c.tee}` : ''}{c?.slope ? ` · Slope ${c.slope}` : ''}</p>
+                {groups.length > 0 && <div className="roundGroups">{groups.map((group, index) => <span key={group.id || index}>{group.name || `Boll ${index + 1}`} · {group.players?.length || 0} spelare</span>)}</div>}
+                <div className="roundCardActions">
+                  <button type="button" onClick={() => { setSelectedRound(r.slot); setView('score') }}>Öppna score</button>
+                  <button type="button" className="ghost" onClick={() => setOpenRound(isOpen ? null : r.slot)}>{isOpen ? 'Dölj resultat' : `Resultat & scorekort (${results.length})`}</button>
+                  {admin && <button type="button" className="ghost" onClick={() => setEditingRound(r)}>Redigera bollar</button>}
                 </div>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedRound(r.slot)
-                  setView('score')
-                }}
-              >
-                Öppna scorekort
-              </button>
-            </div>
-          </article>
-        )
-      })}
+                {isOpen && <div className="roundPlayerResults">{results.length ? results.map((result, index) => <button type="button" className="roundPlayerResult" key={result.player} onClick={() => setSelectedScorecard({ result, round: r })}><span>{index + 1}</span><div><b>{result.player}</b><small>{result.played}/18 hål · Netto {result.net || '—'}</small></div><strong>{result.points}p</strong><em>{result.strokes || '—'} slag ›</em></button>) : <p className="hint">Inga registrerade scorekort för denna deltävling ännu.</p>}</div>}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+      {selectedScorecard && <PlayerRoundScorecard result={selectedScorecard.result} round={selectedScorecard.round} onClose={() => setSelectedScorecard(null)} />}
+      {editingRound && <div className="scorecardModal" role="dialog" aria-modal="true" onClick={() => setEditingRound(null)}><div className="scorecardDialog ballManagerDialog" onClick={(event) => event.stopPropagation()}><div className="sectionHead"><div><small>Admin</small><h2>Hantera bollar · rond {editingRound.slot}</h2></div><button type="button" className="ghost" onClick={() => setEditingRound(null)}>✕ Stäng</button></div><RoundGroupsEditor round={editingRound} players={players} onChange={setEditingRound} /><div className="adminSaveBar"><button type="button" className="ghost" onClick={() => setEditingRound(null)}>Avbryt</button><button type="button" onClick={saveRoundChanges} disabled={saving}>{saving ? 'Sparar…' : 'Spara bollar i Firebase'}</button></div></div></div>}
     </section>
   )
 }
@@ -820,15 +895,21 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
   const perPlayer = players.map(player => {
     const pr = allRounds.filter(r => r.player === player)
     const ph = holes.filter(h => h.player === player)
-    const avgPts = pr.length ? Math.round(pr.reduce((s,r)=>s+r.points,0)/pr.length*10)/10 : 0
+    const totalPoints = pr.reduce((s,r)=>s+r.points,0)
+    const totalGross = pr.reduce((s,r)=>s+r.strokes,0)
+    const totalNet = Math.round(pr.reduce((s,r)=>s+(r.net || 0),0) * 10) / 10
+    const bestFourPoints = [...pr].sort((a,b)=>b.points-a.points).slice(0,4).reduce((s,r)=>s+r.points,0)
+    const avgPts = pr.length ? Math.round(totalPoints/pr.length*10)/10 : 0
     const avgNet = pr.filter(r=>r.net).length ? Math.round(pr.filter(r=>r.net).reduce((s,r)=>s+r.net,0)/pr.filter(r=>r.net).length*10)/10 : 0
     return {
       player,
       rounds: pr.length,
-      points: pr.reduce((s,r)=>s+r.points,0),
+      points: totalPoints,
+      bestFourPoints,
       avgPts,
       avgNet,
-      gross: pr.reduce((s,r)=>s+r.strokes,0),
+      gross: totalGross,
+      net: totalNet,
       birdies: ph.filter(h=>h.diff===-1).length,
       eagles: ph.filter(h=>h.diff<=-2).length,
       pars: ph.filter(h=>h.diff===0).length,
@@ -857,7 +938,7 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
       <div className="panel wide statBreakdown"><h3>Hålfördelning</h3><div className="breakGrid"><span>🦅 Eagles <b>{eagles}</b></span><span>🐦 Birdies <b>{birdies}</b></span><span>✅ Par <b>{pars}</b></span><span>☝️ Bogeys <b>{bogeys}</b></span><span>✌️ Dubbel+ <b>{doubles}</b></span></div></div>
     </div>}
 
-    {mode === 'players' && <div className="panel"><h3>Spelarstatistik</h3><div className="statTable"><div className="statTableHead"><span>Spelare</span><span>R</span><span>Snitt p</span><span>Snitt netto</span><span>Birdies</span><span>Par</span></div>{perPlayer.map(p => <div className="statTableRow" key={p.player}><b>{p.player}</b><span>{p.rounds}</span><span>{p.avgPts}</span><span>{p.avgNet || '—'}</span><span>{p.birdies + p.eagles}</span><span>{p.pars}</span></div>)}</div></div>}
+    {mode === 'players' && <div className="panel playerTotalsPanel"><h3>Spelarstatistik</h3><p className="hint">Totala värden från alla spelade deltävlingar. Bästa 4 är summan av spelarens fyra högsta råpoäng.</p><div className="statTable totalsTable"><div className="statTableHead"><span>Spelare</span><span>R</span><span>Brutto totalt</span><span>Netto totalt</span><span>Poäng totalt</span><span>Bästa 4</span><span>Snitt p</span></div>{perPlayer.map(p => <div className="statTableRow" key={p.player}><b>{p.player}</b><span>{p.rounds}</span><span>{p.gross || '—'}</span><span>{p.net || '—'}</span><span>{p.points}p</span><span><strong>{p.bestFourPoints}p</strong></span><span>{p.avgPts}</span></div>)}</div></div>}
 
     {mode === 'records' && <div className="cards">
       <article className="recordCard"><small>Bästa poäng</small><b>{bestPoints ? `${bestPoints.adj}p` : '—'}</b><span>{bestPoints?.player}</span><em>{bestPoints?.course?.name}</em></article>
@@ -888,3 +969,4 @@ function Chat({players, identity}) {
 
 
 export default App
+
