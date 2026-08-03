@@ -1072,3 +1072,134 @@ button.danger { border-color: rgba(255,100,100,.4); color: #ffb4b4; }
 .roundScoreSummary strong { font-size:20px; color:var(--cream,#f7f2df); }
 .roundScoreSummary .scoreResult { width:30px; height:30px; font-size:12px; }
 @media (max-width:760px) { .roundScoreSummary { grid-template-columns:1fr 1fr; } .roundScoreSummary > div:last-child { grid-column:1 / -1; } }
+
+/* Volvo Masters 2.8 – spelarprofil och säsongsform */
+.profileMain{
+  display:grid;
+  gap:18px;
+  min-width:0;
+}
+
+.profileStatGrid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+.seasonFormPanel{
+  overflow:hidden;
+}
+
+.seasonFormChart{
+  min-height:210px;
+  display:flex;
+  align-items:flex-end;
+  gap:14px;
+  padding:18px 8px 4px;
+}
+
+.seasonFormItem{
+  flex:1;
+  min-width:42px;
+  display:grid;
+  gap:7px;
+  justify-items:center;
+}
+
+.seasonFormTrack{
+  width:min(54px,100%);
+  height:140px;
+  display:flex;
+  align-items:flex-end;
+  overflow:hidden;
+  border-radius:18px;
+  background:rgba(255,255,255,.055);
+  border:1px solid var(--line);
+}
+
+.seasonFormTrack span{
+  width:100%;
+  min-height:8px;
+  border-radius:16px;
+  background:linear-gradient(180deg,var(--gold),rgba(214,179,95,.35));
+  box-shadow:0 0 24px rgba(214,179,95,.18);
+}
+
+.seasonFormItem strong{ color:var(--cream); }
+.seasonFormItem small{ color:var(--muted); }
+
+.playerRoundArchive{
+  min-width:0;
+}
+
+.profileRoundList{
+  display:grid;
+  gap:10px;
+}
+
+.profileRoundCard{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto 24px;
+  align-items:center;
+  gap:18px;
+  padding:16px 18px;
+  text-align:left;
+  border-radius:18px;
+  background:rgba(255,255,255,.035);
+}
+
+.profileRoundCard > div:first-child{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+
+.profileRoundCard > div:first-child b{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.profileRoundCard small{ color:var(--muted); }
+
+.profileRoundNumbers{
+  display:flex;
+  gap:18px;
+}
+
+.profileRoundNumbers span{
+  display:grid;
+  gap:2px;
+  text-align:center;
+}
+
+.profileRoundNumbers strong{
+  color:var(--cream);
+  font-size:18px;
+}
+
+.profileRoundArrow{
+  color:var(--gold);
+  font-size:30px;
+  line-height:1;
+}
+
+@media (max-width:800px){
+  .profileStatGrid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .profileRoundCard{ grid-template-columns:minmax(0,1fr) 22px; }
+  .profileRoundNumbers{
+    grid-column:1 / -1;
+    grid-row:2;
+    justify-content:space-between;
+  }
+  .profileRoundArrow{
+    grid-column:2;
+    grid-row:1;
+  }
+}
+
+@media (max-width:520px){
+  .seasonFormChart{ gap:8px; }
+  .seasonFormTrack{ height:110px; }
+  .profileRoundNumbers{ gap:8px; }
+  .profileRoundNumbers span{ flex:1; }
+}

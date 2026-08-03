@@ -360,7 +360,7 @@ useEffect(() => {
     players={data.players}
   />
 )}
-      {view === 'players' && <Players players={data.players} board={board} playerHcp={data.playerHcp} updateHcp={updateHcp} admin={admin} />}
+      {view === 'players' && <Players players={data.players} board={board} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} updateHcp={updateHcp} admin={admin} />}
       {view === 'stats' && <Stats board={board} rounds={data.rounds} players={data.players} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} />}
       {view === 'chat' && <Chat players={data.players} identity={identity} />}
       {view === "gallery" && (
@@ -988,48 +988,96 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
   </section>
 }
 
-function Players({players, board, playerHcp, updateHcp, admin}) {
+function Players({ players, board, rounds, courses, scores, playerHcp, updateHcp, admin }) {
   const [selected, setSelected] = useState(players[0] || '')
-  const row = board.find(b => b.player === selected)
-  const best = row?.best || []
-  const latest = row?.latest
-  const initials = selected.split(' ').map(x=>x[0]).join('').slice(0,2)
+  const [selectedScorecard, setSelectedScorecard] = useState(null)
+  const row = board.find(item => item.player === selected)
+  const initials = selected.split(' ').map(part => part[0]).join('').slice(0, 2)
+  const playerRounds = rounds
+    .map(round => ({ round, result: playerRoundResult(selected, round, courses, scores, playerHcp) }))
+    .filter(item => item.result.played > 0)
+    .sort((a, b) => Number(a.round.slot) - Number(b.round.slot))
+  const recentRounds = playerRounds.slice(-5)
+  const maxFormPoints = Math.max(1, ...recentRounds.map(item => item.result.points || 0))
+  const seasonSummary = {
+    gross: playerRounds.reduce((sum, item) => sum + (item.result.strokes || 0), 0),
+    net: playerRounds.reduce((sum, item) => sum + (item.result.net || 0), 0),
+    rawPoints: playerRounds.reduce((sum, item) => sum + (item.result.points || 0), 0),
+    birdies: playerRounds.reduce((sum, item) => sum + item.result.holeBreakdown.filter(hole => hole.diff === -1).length, 0),
+  }
+
+  useEffect(() => {
+    if (!selected && players.length) setSelected(players[0])
+    if (selected && !players.includes(selected)) setSelected(players[0] || '')
+  }, [players, selected])
+
   return <section className="playersPro">
     <div className="panel playerHero">
       <div className="bigAvatar">{initials}</div>
       <div>
         <small>Spelarprofil</small>
         <h2>{selected}</h2>
-        <p>{row?.rounds || 0} spelade rundor · {row?.total || 0}p totalt · senaste {latest ? `${latest.points}p` : 'ingen runda'}</p>
+        <p>{row?.rounds || 0} spelade rundor · {row?.total || 0}p justerat · {seasonSummary.rawPoints} råpoäng</p>
       </div>
-      {admin && <label className="hcpEditor">HCP<input value={playerHcp[selected] || ''} onChange={e => updateHcp(selected, e.target.value)} placeholder="HCP" /></label>}
+      {admin && <label className="hcpEditor">HCP<input value={playerHcp[selected] || ''} onChange={event => updateHcp(selected, event.target.value)} placeholder="HCP" /></label>}
     </div>
 
     <div className="profileGrid">
       <div className="panel playerList">
         <h3>Spelare</h3>
-        {players.map(p => {
-          const b = board.find(x => x.player === p)
-          return <button key={p} className={p === selected ? 'active' : ''} onClick={() => setSelected(p)}>
-            <span>{p.split(' ')[0]}</span><b>{b?.total || 0}p</b>
+        {players.map(player => {
+          const playerBoard = board.find(item => item.player === player)
+          return <button key={player} className={player === selected ? 'active' : ''} onClick={() => setSelected(player)}>
+            <span>{player}</span><b>{playerBoard?.total || 0}p</b>
           </button>
         })}
       </div>
 
-      <div className="panel profileStats">
-        <h3>Säsongskort</h3>
-        <div className="stats four">
-          <div><strong>{row?.total || 0}</strong><span>Poäng</span></div>
-          <div><strong>{row?.rounds || 0}</strong><span>Rundor</span></div>
-          <div><strong>{latest?.strokes || '—'}</strong><span>Senaste slag</span></div>
-          <div><strong>{latest?.net || '—'}</strong><span>Senaste netto</span></div>
+      <div className="profileMain">
+        <div className="panel profileStats">
+          <div className="sectionHead"><h3>Säsongskort</h3><span>{playerRounds.length} scorekort</span></div>
+          <div className="stats profileStatGrid">
+            <div><strong>{seasonSummary.gross || '—'}</strong><span>Brutto totalt</span></div>
+            <div><strong>{seasonSummary.net || '—'}</strong><span>Netto totalt</span></div>
+            <div><strong>{seasonSummary.rawPoints}</strong><span>Råpoäng</span></div>
+            <div><strong>{row?.best4RawPoints || 0}</strong><span>Bästa 4</span></div>
+            <div><strong>{row?.avgPoints || 0}</strong><span>Snittpoäng</span></div>
+            <div><strong>{seasonSummary.birdies}</strong><span>Birdies</span></div>
+          </div>
         </div>
-        <h3>Bästa rundor</h3>
-        <div className="roundHistory">
-          {best.length ? best.map((r,i)=><div key={`${r.course.name}-${i}`}><span>{i+1}. {r.course.name}</span><b>{r.adj}p</b><small>{r.strokes || '—'} brutto · {r.net || '—'} netto</small></div>) : <p className="hint">Ingen registrerad runda ännu.</p>}
+
+        <div className="panel seasonFormPanel">
+          <div className="sectionHead"><h3>Säsongens form</h3><span>Senaste fem rundorna</span></div>
+          {recentRounds.length ? <div className="seasonFormChart">
+            {recentRounds.map(({ round, result }) => <div className="seasonFormItem" key={round.slot}>
+              <div className="seasonFormTrack"><span style={{ height: `${Math.max(8, Math.round((result.points / maxFormPoints) * 100))}%` }} /></div>
+              <strong>{result.points}p</strong>
+              <small>R{round.slot}</small>
+            </div>)}
+          </div> : <p className="hint">Ingen registrerad runda ännu.</p>}
+        </div>
+
+        <div className="panel playerRoundArchive">
+          <div className="sectionHead"><h3>Alla scorekort</h3><span>Tryck för hål-för-hål</span></div>
+          <div className="profileRoundList">
+            {playerRounds.length ? playerRounds.map(({ round, result }) => <button className="profileRoundCard" key={round.slot} onClick={() => setSelectedScorecard({ round, result })}>
+              <div>
+                <small>Rond {round.slot} · {round.date || 'Datum saknas'}</small>
+                <b>{result.course.name}</b>
+              </div>
+              <div className="profileRoundNumbers">
+                <span><small>Brutto</small><strong>{result.strokes || '—'}</strong></span>
+                <span><small>Netto</small><strong>{result.net || '—'}</strong></span>
+                <span><small>Poäng</small><strong>{result.points}p</strong></span>
+              </div>
+              <span className="profileRoundArrow">›</span>
+            </button>) : <p className="hint">Ingen registrerad runda ännu.</p>}
+          </div>
         </div>
       </div>
     </div>
+
+    {selectedScorecard && <PlayerScorecardModal result={selectedScorecard.result} round={selectedScorecard.round} onClose={() => setSelectedScorecard(null)} />}
   </section>
 }
 
