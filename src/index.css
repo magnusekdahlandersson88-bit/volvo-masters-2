@@ -1002,8 +1002,73 @@ img {
   width:auto;
   display:block;
 }
-/* Volvo Masters 2.5 */
-.roundsPage{display:grid;gap:22px}.roundCardActions{display:flex;flex-wrap:wrap;gap:10px}.roundCardActions button{flex:1 1 180px}.roundPlayerResults{display:grid;gap:8px;margin-top:18px}.roundPlayerResult{width:100%;display:grid;grid-template-columns:36px minmax(0,1fr) auto auto;align-items:center;gap:12px;text-align:left;padding:12px 14px;border-radius:16px}.roundPlayerResult>span{font-weight:900;opacity:.65;text-align:center}.roundPlayerResult div{display:grid;min-width:0}.roundPlayerResult div small{opacity:.68}.roundPlayerResult strong{color:var(--gold,#d4af4c);white-space:nowrap}.roundPlayerResult em{font-style:normal;opacity:.72;white-space:nowrap}
-.scorecardModal{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.82);backdrop-filter:blur(8px)}.scorecardDialog{width:min(1180px,96vw);max-height:92vh;overflow:auto;border:1px solid rgba(212,175,76,.28);border-radius:24px;padding:22px;background:#07150f;box-shadow:0 32px 100px rgba(0,0,0,.58)}.scorecardSummary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}.scorecardSummary>div{display:grid;gap:4px;padding:14px;border:1px solid rgba(212,175,76,.18);border-radius:16px;background:rgba(255,255,255,.025)}.scorecardSummary small{opacity:.65}.scorecardSummary strong{font-size:24px}.playerScoreTableWrap{overflow-x:auto;border-radius:16px}.playerScoreTable{width:100%;min-width:1050px;border-collapse:collapse}.playerScoreTable th,.playerScoreTable td{padding:10px 8px;border:1px solid rgba(255,255,255,.08);text-align:center}.playerScoreTable th{background:rgba(212,175,76,.10)}.playerScoreTable tbody th{position:sticky;left:0;z-index:1;background:#0b2017;text-align:left}
-.ballManagerDialog{width:min(980px,96vw)}.groupEditor{display:grid;gap:14px}.groupEditorCard{display:grid;gap:12px;padding:16px;border:1px solid rgba(212,175,76,.18);border-radius:18px;background:rgba(255,255,255,.025)}.groupEditorHead{display:grid;grid-template-columns:minmax(180px,1fr) 140px auto;gap:10px}.groupEditorHead input,.groupPlayerEditor select{width:100%}.groupPlayerEditors{display:grid;gap:8px}.groupPlayerEditor{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.adminSaveBar{position:sticky;bottom:-22px;display:flex;justify-content:flex-end;gap:10px;margin:20px -22px -22px;padding:16px 22px;border-top:1px solid rgba(212,175,76,.18);background:rgba(7,21,15,.96)}.danger{border-color:rgba(255,90,90,.35)!important}.totalsTable .statTableHead,.totalsTable .statTableRow{grid-template-columns:minmax(160px,1.5fr) 50px repeat(5,minmax(90px,1fr));min-width:840px}.playerTotalsPanel{overflow-x:auto}
-@media(max-width:700px){.roundPlayerResult{grid-template-columns:30px minmax(0,1fr) auto}.roundPlayerResult em{grid-column:2/4}.scorecardSummary{grid-template-columns:repeat(2,minmax(0,1fr))}.scorecardDialog{padding:16px}.groupEditorHead{grid-template-columns:1fr}.adminSaveBar{margin:16px -16px -16px;padding:14px 16px}}
+/* Version 2.6: individuella scorekort, bolladmin och utökad statistik */
+.roundsPage { display: grid; gap: 22px; }
+.roundQuickStats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin: 16px 0; }
+.roundQuickStats span { padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.025); font-size: 12px; }
+.roundQuickStats b { display: block; font-size: 18px; color: var(--vm-gold-light, #f0d985); }
+.roundCardActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.roundResultsPanel { margin-top: 18px; display: grid; gap: 8px; }
+.roundResultsPanel h4 { margin: 0 0 4px; }
+.roundPlayerResult { width: 100%; display: grid; grid-template-columns: 34px minmax(0,1fr) auto auto; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; border-radius: 16px; }
+.roundPlayerResult > span:nth-child(2) { display: grid; gap: 2px; }
+.roundPlayerResult small { color: var(--muted); font-weight: 500; }
+.roundResultRank { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(212,175,76,.16); color: var(--vm-gold-light, #f0d985); }
+
+.scoreModalBackdrop { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 18px; background: rgba(0,0,0,.78); backdrop-filter: blur(8px); }
+.scoreModal { width: min(1100px, 96vw); max-height: 92vh; overflow: auto; position: relative; padding: 24px; }
+.scoreModalClose { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; font-size: 24px; z-index: 2; }
+.scoreTotals { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin: 18px 0; }
+.scoreTotals > div { padding: 14px; border: 1px solid var(--line); border-radius: 16px; display: grid; gap: 4px; }
+.scoreTotals strong { font-size: 25px; }
+.fullScorecardWrap { overflow-x: auto; display: grid; gap: 16px; }
+.fullScorecard { width: 100%; min-width: 760px; border-collapse: collapse; }
+.fullScorecard th, .fullScorecard td { border: 1px solid var(--line); padding: 9px 7px; text-align: center; }
+.fullScorecard th { background: rgba(212,175,76,.1); }
+.fullScorecard tbody th { text-align: left; position: sticky; left: 0; background: #0a1b12; }
+
+.groupEditor { margin-top: 18px; padding: 18px; }
+.groupEditorGrid { display: grid; gap: 12px; }
+.groupEditCard { border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; gap: 12px; background: rgba(255,255,255,.02); }
+.groupEditHead { display: grid; grid-template-columns: minmax(0,1fr) 130px auto; gap: 8px; }
+.groupEditHead input, .groupPlayerEditor select { width: 100%; }
+.groupPlayerEditors { display: grid; gap: 8px; }
+.groupPlayerEditor { display: grid; grid-template-columns: minmax(0,1fr) 42px; gap: 8px; }
+.groupEditorActions { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; }
+button.danger { border-color: rgba(255,100,100,.4); color: #ffb4b4; }
+
+.leaderTotals { display: grid; justify-items: end; gap: 2px; }
+.leaderTotals small { color: var(--muted); font-size: 11px; }
+.statPanelScrollable { overflow-x: auto; }
+.extendedStatsTable { min-width: 980px; }
+.extendedStatsTable .statTableHead,
+.extendedStatsTable .statTableRow { grid-template-columns: 1.5fr .45fr repeat(6,minmax(90px,1fr)); }
+
+@media (max-width: 700px) {
+  .roundQuickStats { grid-template-columns: 1fr; }
+  .roundCardActions { grid-template-columns: 1fr; }
+  .roundPlayerResult { grid-template-columns: 30px minmax(0,1fr) auto; }
+  .roundPlayerResult > span:last-child { display: none; }
+  .scoreModal { width: 100%; padding: 18px 14px; }
+  .scoreTotals { grid-template-columns: 1fr 1fr; }
+  .groupEditHead { grid-template-columns: 1fr; }
+  .groupEditorActions { flex-direction: column; }
+  .leaderTotals small { display: none; }
+}
+
+
+/* Version 2.7: färgkodade scorer i individuella scorekort */
+.scoreResult { display:inline-grid; place-items:center; width:34px; height:34px; border-radius:50%; font-weight:1000; line-height:1; border:2px solid transparent; box-shadow:0 4px 12px rgba(0,0,0,.22); }
+.scoreResultEagle { background:#d9b43b; color:#171203; border-color:#f4dc78; }
+.scoreResultBirdie { background:#d62828; color:#fff; border-color:#ff6b6b; }
+.scoreResultPar { background:#f4f1e6; color:#172018; border-color:rgba(255,255,255,.85); }
+.scoreResultBogey { background:#52a9e8; color:#fff; border-color:#91cef4; }
+.scoreResultDouble { background:#123f78; color:#fff; border-color:#2f69aa; }
+.scoreResultEmpty { background:transparent; color:var(--muted); border-color:rgba(255,255,255,.12); box-shadow:none; }
+.fullScorecard td .scoreResult { margin:-4px auto; }
+.roundScoreSummary { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin:0 0 18px; }
+.roundScoreSummary > div { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:9px; min-width:0; padding:11px 12px; border:1px solid var(--line); border-radius:16px; background:rgba(255,255,255,.035); }
+.roundScoreSummary small { color:var(--muted); white-space:nowrap; }
+.roundScoreSummary strong { font-size:20px; color:var(--cream,#f7f2df); }
+.roundScoreSummary .scoreResult { width:30px; height:30px; font-size:12px; }
+@media (max-width:760px) { .roundScoreSummary { grid-template-columns:1fr 1fr; } .roundScoreSummary > div:last-child { grid-column:1 / -1; } }
