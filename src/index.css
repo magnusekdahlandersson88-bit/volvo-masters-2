@@ -1203,3 +1203,39 @@ button.danger { border-color: rgba(255,100,100,.4); color: #ffb4b4; }
   .profileRoundNumbers{ gap:8px; }
   .profileRoundNumbers span{ flex:1; }
 }
+
+
+/* Pushnotiser */
+.notificationSetup{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px;
+}
+.notificationSetup small{color:var(--muted)}
+.foregroundNotice{
+  position:fixed;
+  top:18px;
+  right:18px;
+  z-index:12000;
+  width:min(390px,calc(100vw - 36px));
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr);
+  gap:12px;
+  align-items:center;
+  padding:15px 17px;
+  text-align:left;
+  border-radius:18px;
+  border:1px solid rgba(212,175,76,.45);
+  background:rgba(3,19,12,.96);
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
+  backdrop-filter:blur(18px);
+}
+.foregroundNotice > span{font-size:25px}
+.foregroundNotice div{display:grid;gap:4px;min-width:0}
+.foregroundNotice b{color:var(--cream)}
+.foregroundNotice small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:700px){
+  .foregroundNotice{top:10px;right:10px;width:calc(100vw - 20px)}
+  .notificationSetup{align-items:flex-start;flex-direction:column}
+}

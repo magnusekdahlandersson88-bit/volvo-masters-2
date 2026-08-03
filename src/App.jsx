@@ -7,7 +7,7 @@ import './index.css'
 import LiveBallFollow from "./components/LiveBallFollow";
 import LiveActivityFeed from "./components/LiveActivityFeed";
 import Gallery from "./components/Gallery";
-import { getMessaging, getToken } from "firebase/messaging";
+import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
 const firebaseConfig = {
   apiKey: 'AIzaSyBx8lrLzDWoYAonfiWMvOIpkkDqOo2LC88',
   authDomain: 'volvo-masters.firebaseapp.com',
@@ -20,31 +20,54 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 const storage = getStorage(app)
-const messaging = getMessaging(app)
-const VAPID_KEY = "BMJD9Wr_zDfFGIbAdSRqB39xtu93VvOl117StX3suiERk6l23O5uwW3lkkPtTwc5-h_oieWP5bheEhhBQtnnyk8";
-async function enableNotifications() {
-  try {
-    const permission = await Notification.requestPermission();
+const VAPID_KEY = "BMJD9Wr_zDfFGIbAdSRqB39xtu93VvOl117StX3suiERk6l23O5uwW3lkkPtTwc5-h_oieWP5bheEhhBQtnnyk8"
 
-    if (permission !== "granted") {
-      alert("Notiser nekades");
-      return;
-    }
-
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
-    });
-
-    console.log("FCM Token:", token);
-
-await setDoc(doc(db, "pushTokens", token), {
-  token,
-  createdAt: Date.now(),
-  userAgent: navigator.userAgent,
-});
-} catch (err) {
-  console.error(err);
+function getDeviceId() {
+  const key = 'vm_device_id'
+  let id = localStorage.getItem(key)
+  if (!id) {
+    id = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    localStorage.setItem(key, id)
+  }
+  return id
 }
+
+async function getMessagingInstance() {
+  if (!(await isSupported())) return null
+  return getMessaging(app)
+}
+
+async function registerPushToken(playerName = '') {
+  if (typeof Notification === 'undefined' || !('serviceWorker' in navigator)) {
+    throw new Error('Den här webbläsaren stöder inte pushnotiser.')
+  }
+
+  const permission = await Notification.requestPermission()
+  if (permission !== 'granted') return { enabled:false, reason:'denied' }
+
+  const messaging = await getMessagingInstance()
+  if (!messaging) throw new Error('Firebase Messaging stöds inte på den här enheten.')
+
+  const serviceWorkerRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  await navigator.serviceWorker.ready
+
+  const token = await getToken(messaging, {
+    vapidKey: VAPID_KEY,
+    serviceWorkerRegistration,
+  })
+  if (!token) throw new Error('Ingen FCM-token kunde skapas.')
+
+  await setDoc(doc(db, 'pushTokens', token), {
+    token,
+    deviceId: getDeviceId(),
+    playerName: playerName || '',
+    updatedAt: Date.now(),
+    createdAt: Date.now(),
+    userAgent: navigator.userAgent,
+    enabled: true,
+  }, { merge:true })
+
+  return { enabled:true, token }
 }
 
 const ADMIN_PASSWORD = '340426'
@@ -284,14 +307,59 @@ function App() {
   const [view, setView] = useState('home')
   const [admin, setAdmin] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(
-  Notification.permission === "granted"
-);
+    typeof Notification !== 'undefined' && Notification.permission === 'granted'
+  )
+  const [notificationStatus, setNotificationStatus] = useState('')
+  const [foregroundNotice, setForegroundNotice] = useState(null)
 
-useEffect(() => {
-  if (Notification.permission === "granted") {
-    setNotificationsEnabled(true);
+  useEffect(() => {
+    const requestedView = new URLSearchParams(window.location.search).get('view')
+    if (requestedView) setView(requestedView)
+  }, [])
+
+  useEffect(() => {
+    let unsubscribe = () => {}
+    let timer
+
+    async function setupMessaging() {
+      try {
+        const messaging = await getMessagingInstance()
+        if (!messaging) return
+        unsubscribe = onMessage(messaging, payload => {
+          const dataPayload = payload.data || {}
+          const notice = {
+            title: dataPayload.title || payload.notification?.title || 'Volvo Masters',
+            body: dataPayload.body || payload.notification?.body || 'Ny händelse',
+            view: dataPayload.view || 'home',
+          }
+          setForegroundNotice(notice)
+          clearTimeout(timer)
+          timer = setTimeout(() => setForegroundNotice(null), 6000)
+        })
+      } catch (error) {
+        console.error('Kunde inte starta foreground-notiser', error)
+      }
+    }
+
+    setupMessaging()
+    return () => { unsubscribe(); clearTimeout(timer) }
+  }, [])
+
+  async function enableNotificationsForCurrentDevice() {
+    setNotificationStatus('Aktiverar…')
+    try {
+      const result = await registerPushToken(identity?.marker || '')
+      if (!result.enabled) {
+        setNotificationStatus('Notiser är blockerade i telefonens inställningar.')
+        return
+      }
+      setNotificationsEnabled(true)
+      setNotificationStatus('Notiser är aktiverade.')
+    } catch (error) {
+      console.error(error)
+      setNotificationStatus(error.message || 'Notiser kunde inte aktiveras.')
+    }
   }
-}, []);
   const [selectedRound, setSelectedRound] = useState(1)
   
   const board = useMemo(() => leaderboard(data.players, data.rounds, data.courses, data.scores, data.playerHcp), [data.players, data.rounds, data.courses, data.scores, data.playerHcp])
@@ -333,13 +401,22 @@ useEffect(() => {
 
     <main className="content">
       {!notificationsEnabled && (
-  <button
-    onClick={enableNotifications}
-    className="adminButton"
-  >
-    Aktivera notiser
-  </button>
-)}
+        <div className="notificationSetup">
+          <button onClick={enableNotificationsForCurrentDevice} className="adminButton">
+            Aktivera notiser
+          </button>
+          {notificationStatus && <small>{notificationStatus}</small>}
+        </div>
+      )}
+      {foregroundNotice && (
+        <button
+          className="foregroundNotice"
+          onClick={() => { setView(foregroundNotice.view); setForegroundNotice(null) }}
+        >
+          <span>🔔</span>
+          <div><b>{foregroundNotice.title}</b><small>{foregroundNotice.body}</small></div>
+        </button>
+      )}
       <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
       {view === 'home' && <Home
   board={board}
@@ -1177,7 +1254,14 @@ function Chat({players, identity}) {
   useEffect(() => { const q = query(collection(db,'chat'), orderBy('time','asc')); return onSnapshot(q, snap => setMessages(snap.docs.map(d => ({id:d.id, ...d.data()}))), () => {}) }, [])
   async function send() {
     if (!text.trim()) return
-    await addDoc(collection(db,'chat'), { name, text:text.trim(), time:Date.now(), timeStr:new Date().toLocaleString('sv-SE') })
+    await addDoc(collection(db,'chat'), {
+      name,
+      text:text.trim(),
+      time:Date.now(),
+      timeStr:new Date().toLocaleString('sv-SE'),
+      senderDeviceId:getDeviceId(),
+      type:'chat',
+    })
     setText('')
   }
   return <section className="chatPanel"><div className="panel messages"><h2>Chat</h2>{messages.slice(-40).map(m => <div className="msg" key={m.id}><b>{m.name}</b><p>{m.text}</p><small>{m.timeStr}</small></div>)}</div><div className="panel composer"><select value={name} onChange={e=>setName(e.target.value)}>{players.map(p => <option key={p}>{p}</option>)}</select><textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Skriv meddelande…"/><button onClick={send}>Skicka</button></div></section>
@@ -1186,4 +1270,5 @@ function Chat({players, identity}) {
 
 
 export default App
+
 
