@@ -367,10 +367,15 @@ function App() {
   const nextCourse = courseFor(data.courses, nextRound)
 
   function login() {
-    const pwd = prompt('Adminlösenord')
-    if (pwd === ADMIN_PASSWORD) setAdmin(true)
-    else if (pwd) alert('Fel lösenord')
+  const pwd = prompt('Adminlösenord')
+
+  if (pwd === ADMIN_PASSWORD) {
+    setAdmin(true)
+    setView('admin')
+  } else if (pwd) {
+    alert('Fel lösenord')
   }
+}
 
   async function updateHcp(player, value) {
     await data.save({ playerHcp: { ...data.playerHcp, [player]: value } })
