@@ -418,6 +418,39 @@ function App() {
         </button>
       )}
       <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
+      <div
+  style={{
+    margin: "0 0 16px",
+    padding: "14px 16px",
+    borderRadius: "14px",
+    background: notificationsEnabled
+      ? "rgba(34, 197, 94, 0.14)"
+      : "rgba(245, 158, 11, 0.14)",
+    border: notificationsEnabled
+      ? "1px solid rgba(34, 197, 94, 0.45)"
+      : "1px solid rgba(245, 158, 11, 0.45)",
+  }}
+>
+  <strong>
+    {notificationsEnabled
+      ? "🟢 Notiser aktiverade"
+      : "🔔 Aktivera notiser"}
+  </strong>
+
+  <div style={{ marginTop: "5px", opacity: 0.85 }}>
+    {notificationsStatus}
+  </div>
+
+  {!notificationsEnabled && (
+    <button
+      type="button"
+      onClick={enableNotificationsForCurrentDevice}
+      style={{ marginTop: "10px" }}
+    >
+      Aktivera / försök igen
+    </button>
+  )}
+</div>
       {view === 'home' && <Home
   board={board}
   nextRound={nextRound}
