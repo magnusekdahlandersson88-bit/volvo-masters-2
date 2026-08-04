@@ -438,7 +438,7 @@ function App() {
   </strong>
 
   <div style={{ marginTop: "5px", opacity: 0.85 }}>
-    {notificationsStatus}
+    {notificationStatus}
   </div>
 
   {!notificationsEnabled && (
