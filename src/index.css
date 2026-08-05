@@ -1279,3 +1279,47 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
 
 @media(max-width:1000px){.adminOverviewGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.adminRoundGrid,.adminCourseGrid,.adminGroupCards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.adminHero{align-items:flex-start;flex-direction:column;padding:22px}.adminOverviewGrid,.adminRoundGrid,.adminCourseGrid,.adminGroupCards{grid-template-columns:1fr}.adminSection{padding:17px}.adminSectionHead{flex-direction:column}.adminInline{width:100%;flex-direction:column}.adminInline input{min-width:0}.adminPlayerRow{grid-template-columns:42px 1fr}.adminPlayerRow label,.adminPlayerRow button{grid-column:2}.adminActions{flex-direction:column}.adminTabs{margin-inline:-4px}}
+
+
+/* Starttider på nästa deltävling */
+.nextTeeTimes{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:14px 0 18px;
+}
+.nextTeeTimesLabel{
+  padding-top:8px;
+  color:rgba(255,255,255,.72);
+  font-size:.76rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.nextTeeTimesList{display:flex;gap:8px;flex-wrap:wrap}
+.nextTeeTime{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border:1px solid rgba(217,180,84,.35);
+  border-radius:999px;
+  background:rgba(3,19,12,.68);
+  backdrop-filter:blur(8px);
+  box-shadow:0 8px 20px rgba(0,0,0,.18);
+}
+.nextTeeTime b{font-size:.78rem;color:rgba(255,255,255,.78)}
+.nextTeeTime strong{font-size:.92rem;color:#f1d078}
+.nextTeeTimesMissing{
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.09);
+  color:rgba(255,255,255,.78);
+}
+@media (max-width:700px){
+  .nextTeeTimes{display:block;margin:12px 0 16px}
+  .nextTeeTimesLabel{display:block;padding:0 0 7px}
+  .nextTeeTimesList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nextTeeTime{justify-content:space-between;border-radius:12px}
+}

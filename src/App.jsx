@@ -571,6 +571,14 @@ function Topbar({ loading, admin, identity, clearIdentity }) {
 
 
 function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound}) {
+  const nextTeeTimes = (nextRound.groups || [])
+    .map((group, index) => ({
+      id: group.id ?? index + 1,
+      name: group.name || `Boll ${index + 1}`,
+      time: nextRound.teeTimes?.[group.id ?? index + 1] || ''
+    }))
+    .filter(item => item.time)
+
   function startScorecard() {
   setSelectedRound(nextRound.slot)
   setView('score')
@@ -603,6 +611,22 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound})
         {nextRound.date || "Datum kommer"} · Tee {nextCourse.tee} · Slope{" "}
         {nextCourse.slope}
       </p>
+
+      <div className="nextTeeTimes" aria-label="Starttider för nästa deltävling">
+        <span className="nextTeeTimesLabel">Starttider</span>
+        {nextTeeTimes.length > 0 ? (
+          <div className="nextTeeTimesList">
+            {nextTeeTimes.map(item => (
+              <span className="nextTeeTime" key={item.id}>
+                <b>{item.name}</b>
+                <strong>{item.time}</strong>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="nextTeeTimesMissing">Starttider kommer</span>
+        )}
+      </div>
 
       <div className="heroActions">
         <button onClick={startScorecard}>Starta scorekort</button>
