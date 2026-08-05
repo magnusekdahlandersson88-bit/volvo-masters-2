@@ -45,7 +45,19 @@ exports.notifyNewChatMessage = onDocumentCreated(
     if (!message || !message.text) return
 
     const entries = await loadEnabledTokens(message.senderDeviceId || '')
-    if (!entries.length) return
+    console.log('Pushmottagare:', {
+  senderDeviceId: message.senderDeviceId || null,
+  antal: entries.length,
+  enheter: entries.map((entry) => ({
+    id: entry.id,
+    deviceId: entry.deviceId || null,
+    harToken: Boolean(entry.token),
+  })),
+})
+    if (!entries.length) {
+  console.log('Ingen registrerad mottagare hittades')
+  return
+}
 
     const title = `💬 ${message.name || 'Volvo Masters'}`
     const body = previewText(message.text)
@@ -71,6 +83,18 @@ exports.notifyNewChatMessage = onDocumentCreated(
           },
         },
       })
+      console.log('Pushresultat:', {
+  lyckades: response.successCount,
+  misslyckades: response.failureCount,
+  fel: response.responses
+    .map((result, index) => ({
+      index,
+      success: result.success,
+      code: result.error?.code || null,
+      message: result.error?.message || null,
+    }))
+    .filter((result) => !result.success),
+})
       await removeInvalidTokens(batch, response)
     }
 
