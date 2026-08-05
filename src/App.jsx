@@ -400,8 +400,8 @@ function App() {
   return <div className="shell">
     <aside className="sidebar">
       <div className="brand"><span>♛</span><div><b>VOLVO</b><small>MASTERS 2.4</small></div></div>
-      <Nav view={view} setView={setView} />
-      <button className="adminButton" onClick={admin ? () => setAdmin(false) : login}>{admin ? 'Lämna admin' : 'Admin'}</button>
+      <Nav view={view} setView={setView} admin={admin} onAdmin={login} />
+      <button className="adminButton" onClick={admin ? () => { setAdmin(false); setView('home') } : login}>{admin ? 'Lämna admin' : 'Admin'}</button>
     </aside>
 
     <main className="content">
@@ -484,6 +484,21 @@ function App() {
     onUpload={uploadMedia}
   />
 )}
+      {view === 'admin' && admin && (
+        <AdminPanel
+          players={data.players}
+          rounds={data.rounds}
+          courses={data.courses}
+          playerHcp={data.playerHcp}
+          save={data.save}
+          updateRoundGroups={updateRoundGroups}
+          enableNotifications={enableNotificationsForCurrentDevice}
+          notificationsEnabled={notificationsEnabled}
+        />
+      )}
+      {view === 'admin' && !admin && (
+        <div className="panel adminLocked"><span>🔒</span><h2>Admin kräver inloggning</h2><button onClick={login}>Logga in</button></div>
+      )}
     </main>
 
     <footer className="bottomNav">
@@ -492,12 +507,13 @@ function App() {
     setView={setView}
     compact
     onAdmin={login}
+    admin={admin}
   />
 </footer>
   </div>
 }
 
-function Nav({ view, setView, compact=false, onAdmin }) {
+function Nav({ view, setView, compact=false, onAdmin, admin=false }) {
   const allItems = [
     ['home','⌂','Hem'], ['leaderboard','🏆','Leaderboard'], ['rounds','⛳','Rundor'], ['score','✍️','Score'],
     ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'],['live', '📡', 'Live'], ['gallery','🖼️','Galleri'], ['admin', '⚙️', 'Admin']
@@ -508,7 +524,8 @@ function Nav({ view, setView, compact=false, onAdmin }) {
 const visibleItems = allItems
   return <nav className={compact ? 'nav compact' : 'nav'}>{visibleItems.map(([id, icon, label]) =>  <button key={id} className={view === id ? 'active' : ''} onClick={() => {
   if (id === 'admin') {
-    onAdmin()
+    if (admin) setView('admin')
+    else if (onAdmin) onAdmin()
   } else {
     setView(id)
   }
@@ -1282,6 +1299,122 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
 
     {mode === 'holes' && <div className="panel"><h3>Svåraste hålen</h3>{hardest.map(h => <div className="leaderRow" key={h.hole}><div><b>Hål {h.hole}</b><small>{h.played} registrerade scorer</small></div><strong>{h.avgPoints}p</strong><span className="muted">{h.avgDiff > 0 ? '+' : ''}{h.avgDiff} mot par</span></div>)}</div>}
   </section>
+}
+
+
+function AdminPanel({ players, rounds, courses, playerHcp, save, updateRoundGroups, enableNotifications, notificationsEnabled }) {
+  const [tab, setTab] = useState('overview')
+  const [newPlayer, setNewPlayer] = useState('')
+  const [status, setStatus] = useState('')
+  const [roundDrafts, setRoundDrafts] = useState(() => clone(rounds))
+  const [courseDrafts, setCourseDrafts] = useState(() => clone(courses))
+
+  useEffect(() => setRoundDrafts(clone(rounds)), [rounds])
+  useEffect(() => setCourseDrafts(clone(courses)), [courses])
+
+  async function flash(message, task) {
+    setStatus('Sparar…')
+    try { await task(); setStatus(message) }
+    catch (error) { console.error(error); setStatus('Kunde inte spara. Försök igen.') }
+  }
+
+  async function addPlayer() {
+    const name = newPlayer.trim()
+    if (!name || players.includes(name)) return
+    await flash('Spelaren är tillagd.', () => save({ players:[...players, name], playerHcp:{...playerHcp, [name]:''} }))
+    setNewPlayer('')
+  }
+
+  async function renamePlayer(oldName, nextName) {
+    const name = nextName.trim()
+    if (!name || name === oldName || players.includes(name)) return
+    const nextPlayers = players.map(p => p === oldName ? name : p)
+    const nextHcp = {...playerHcp, [name]:playerHcp[oldName] || ''}; delete nextHcp[oldName]
+    const nextRounds = rounds.map(r => ({...r, groups:r.groups?.map(g => ({...g, players:g.players.map(p => p === oldName ? name : p)})) || r.groups}))
+    await flash('Namnet är uppdaterat.', () => save({players:nextPlayers, playerHcp:nextHcp, rounds:nextRounds}))
+  }
+
+  async function removePlayer(name) {
+    if (!confirm(`Ta bort ${name}? Resultatdata lämnas orörd.`)) return
+    const nextPlayers = players.filter(p => p !== name)
+    const nextRounds = rounds.map(r => ({...r, groups:r.groups?.map(g => ({...g, players:g.players.filter(p => p !== name)})) || r.groups}))
+    await flash('Spelaren är borttagen.', () => save({players:nextPlayers, rounds:nextRounds}))
+  }
+
+  function updateRound(slot, patch) {
+    setRoundDrafts(list => list.map(r => r.slot === slot ? {...r, ...patch} : r))
+  }
+
+  async function saveRounds() {
+    await flash('Rundorna är sparade.', () => save({rounds:roundDrafts}))
+  }
+
+  function updateCourse(id, patch) {
+    setCourseDrafts(list => list.map(c => c.id === id ? {...c, ...patch} : c))
+  }
+
+  async function saveCourses() {
+    await flash('Banorna är sparade.', () => save({courses:courseDrafts}))
+  }
+
+  const tabs = [['overview','Översikt'],['players','Spelare'],['rounds','Deltävlingar'],['groups','Bollar'],['courses','Banor'],['notifications','Notiser']]
+  return <section className="adminPage">
+    <div className="adminHero">
+      <div><small>VOLVO MASTERS CONTROL CENTER</small><h2>Adminpanel</h2><p>Ändringar sparas direkt i Firebase och syns för alla.</p></div>
+      <div className="adminPulse"><i />Admin aktiv</div>
+    </div>
+    <div className="adminTabs">{tabs.map(([id,label]) => <button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}</button>)}</div>
+    {status && <div className="adminStatus">{status}</div>}
+
+    {tab==='overview' && <div className="adminOverviewGrid">
+      <div className="adminMetric"><span>👥</span><strong>{players.length}</strong><small>Spelare</small></div>
+      <div className="adminMetric"><span>⛳</span><strong>{rounds.length}</strong><small>Deltävlingar</small></div>
+      <div className="adminMetric"><span>🏌️</span><strong>{courses.length}</strong><small>Banor</small></div>
+      <div className="adminMetric"><span>🔔</span><strong>{notificationsEnabled?'På':'Av'}</strong><small>Notiser på denna enhet</small></div>
+      <div className="panel adminWelcome"><h3>Snabbstart inför tävlingen</h3><ol><li>Kontrollera datum och bana under Deltävlingar.</li><li>Ordna spelarna under Bollar.</li><li>Kontrollera HCP under Spelare.</li><li>Öppna Score och välj markör.</li></ol></div>
+    </div>}
+
+    {tab==='players' && <div className="panel adminSection">
+      <div className="adminSectionHead"><div><h3>Hantera spelare</h3><p>Lägg till, byt namn, ta bort och ändra HCP.</p></div><div className="adminInline"><input value={newPlayer} onChange={e=>setNewPlayer(e.target.value)} placeholder="Nytt spelarnamn"/><button onClick={addPlayer}>Lägg till</button></div></div>
+      <div className="adminPlayerList">{players.map(player => <AdminPlayerRow key={player} player={player} hcp={playerHcp[player] || ''} onRename={renamePlayer} onHcp={value=>save({playerHcp:{...playerHcp,[player]:value}})} onRemove={removePlayer}/>)}</div>
+    </div>}
+
+    {tab==='rounds' && <div className="panel adminSection">
+      <div className="adminSectionHead"><div><h3>Deltävlingar</h3><p>Ändra datum och bana.</p></div><button onClick={saveRounds}>Spara alla</button></div>
+      <div className="adminRoundGrid">{roundDrafts.map(r => <div className="adminRoundCard" key={r.slot}><b>Deltävling {r.slot}</b><label>Datum<input value={r.date||''} onChange={e=>updateRound(r.slot,{date:e.target.value})}/></label><label>Bana<select value={r.courseId} onChange={e=>updateRound(r.slot,{courseId:Number(e.target.value)})}>{courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>)}</div>
+    </div>}
+
+    {tab==='groups' && <div className="panel adminSection">
+      <div className="adminSectionHead"><div><h3>Bollar och starttider</h3><p>Flytta spelare med rullistorna och spara rond för rond.</p></div></div>
+      <div className="adminGroupsList">{rounds.map(r => <AdminRoundGroups key={r.slot} round={r} players={players} onSave={updateRoundGroups}/>)}</div>
+    </div>}
+
+    {tab==='courses' && <div className="panel adminSection">
+      <div className="adminSectionHead"><div><h3>Banor</h3><p>Uppdatera tee, slope, CR och par.</p></div><button onClick={saveCourses}>Spara banor</button></div>
+      <div className="adminCourseGrid">{courseDrafts.map(c => <div className="adminCourseCard" key={c.id}><h4>{c.name}</h4><label>Namn<input value={c.name} onChange={e=>updateCourse(c.id,{name:e.target.value})}/></label><div className="adminFieldGrid"><label>Tee<input value={c.tee||''} onChange={e=>updateCourse(c.id,{tee:e.target.value})}/></label><label>Par<input inputMode="numeric" value={c.par||''} onChange={e=>updateCourse(c.id,{par:Number(e.target.value)||''})}/></label><label>CR<input inputMode="decimal" value={c.cr||''} onChange={e=>updateCourse(c.id,{cr:Number(e.target.value)||''})}/></label><label>Slope<input inputMode="numeric" value={c.slope||''} onChange={e=>updateCourse(c.id,{slope:Number(e.target.value)||''})}/></label></div></div>)}</div>
+    </div>}
+
+    {tab==='notifications' && <div className="panel adminSection notificationAdmin">
+      <span className="adminBigIcon">🔔</span><h3>Notiser</h3><p>Aktivera notiser på den här enheten. Testknappen visar en lokal notis så att du kan kontrollera telefonens behörighet.</p>
+      <div className="adminActions"><button onClick={enableNotifications}>{notificationsEnabled?'Registrera om enheten':'Aktivera notiser'}</button><button className="ghost" onClick={()=>{ if(Notification.permission==='granted') new Notification('Volvo Masters',{body:'Testnotisen fungerar på den här enheten.',icon:'/favicon.svg'}); else alert('Aktivera notiser först.') }}>Skicka lokal testnotis</button></div>
+      <small>Chattnotiser i bakgrunden skickas av Firebase-funktionen när telefonens FCM-token är registrerad.</small>
+    </div>}
+  </section>
+}
+
+function AdminPlayerRow({player,hcp,onRename,onHcp,onRemove}) {
+  const [name,setName]=useState(player)
+  useEffect(()=>setName(player),[player])
+  return <div className="adminPlayerRow"><div className="adminAvatar">{player.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><input value={name} onChange={e=>setName(e.target.value)} onBlur={()=>onRename(player,name)}/><label>HCP<input value={hcp} onChange={e=>onHcp(e.target.value)} placeholder="0,0"/></label><button className="danger ghost" onClick={()=>onRemove(player)}>Ta bort</button></div>
+}
+
+function AdminRoundGroups({round,players,onSave}) {
+  const initial = round.groups?.length ? clone(round.groups) : chunkPlayers(players)
+  const [groups,setGroups]=useState(initial)
+  const [times,setTimes]=useState(round.teeTimes||{})
+  useEffect(()=>{setGroups(round.groups?.length?clone(round.groups):chunkPlayers(players));setTimes(round.teeTimes||{})},[round,players])
+  function setPlayer(groupIndex, playerIndex, value){setGroups(gs=>gs.map((g,gi)=>gi===groupIndex?{...g,players:g.players.map((p,pi)=>pi===playerIndex?value:p)}:g))}
+  return <details className="adminGroupRound"><summary><b>Deltävling {round.slot}</b><span>{round.date||'Datum saknas'}</span></summary><div className="adminGroupCards">{groups.map((g,gi)=><div className="adminGroupCard" key={g.id}><div className="adminGroupTitle"><input value={g.name} onChange={e=>setGroups(gs=>gs.map((x,i)=>i===gi?{...x,name:e.target.value}:x))}/><input className="teeTimeInput" type="time" value={times[g.id]||''} onChange={e=>setTimes({...times,[g.id]:e.target.value})}/></div>{g.players.map((p,pi)=><select key={pi} value={p} onChange={e=>setPlayer(gi,pi,e.target.value)}>{players.map(name=><option key={name}>{name}</option>)}</select>)}</div>)}</div><button onClick={()=>onSave(round.slot,groups,times)}>Spara bollar</button></details>
 }
 
 function Chat({players, identity}) {

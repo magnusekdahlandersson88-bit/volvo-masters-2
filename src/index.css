@@ -1254,3 +1254,28 @@ button.danger { border-color: rgba(255,100,100,.4); color: #ffb4b4; }
 .sidebar {
   z-index: 10;
 }
+/* ===== Volvo Masters 3.4: admin + visuell uppfräschning ===== */
+:root{--vm-gold:#e8bd52;--vm-green:#63d98b;--vm-ink:#07130e;--vm-panel:rgba(16,35,26,.78)}
+body{background:radial-gradient(circle at 80% 0%,rgba(81,139,93,.18),transparent 32%),linear-gradient(145deg,#050b08,#0a1811 52%,#07100c);}
+.content{background:linear-gradient(180deg,rgba(255,255,255,.012),transparent 30%)}
+.panel{border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 55px rgba(0,0,0,.22);backdrop-filter:blur(15px)}
+button{transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
+button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.nav button.active{background:linear-gradient(135deg,rgba(232,189,82,.23),rgba(99,217,139,.1));border-color:rgba(232,189,82,.35)}
+
+.adminPage{display:grid;gap:18px;animation:adminIn .28s ease}
+@keyframes adminIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.adminHero{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:27px 30px;border-radius:26px;border:1px solid rgba(232,189,82,.23);background:linear-gradient(135deg,rgba(232,189,82,.13),rgba(31,89,58,.28));box-shadow:0 22px 70px rgba(0,0,0,.25)}
+.adminHero small{letter-spacing:.2em;color:var(--vm-gold);font-weight:800}.adminHero h2{font-size:clamp(28px,4vw,46px);margin:6px 0}.adminHero p{margin:0;color:var(--muted)}
+.adminPulse{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:999px;background:rgba(99,217,139,.12);border:1px solid rgba(99,217,139,.35);white-space:nowrap}.adminPulse i{width:9px;height:9px;border-radius:50%;background:var(--vm-green);box-shadow:0 0 18px var(--vm-green)}
+.adminTabs{display:flex;gap:8px;overflow:auto;padding:4px}.adminTabs button{white-space:nowrap;padding:11px 16px;border-radius:14px;background:rgba(255,255,255,.035)}.adminTabs button.active{color:#08110c;background:linear-gradient(135deg,var(--vm-gold),#f2d987);font-weight:900}
+.adminStatus{padding:11px 15px;border-radius:13px;color:#dff8e8;background:rgba(99,217,139,.1);border:1px solid rgba(99,217,139,.25)}
+.adminOverviewGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.adminMetric{display:grid;gap:4px;padding:22px;border-radius:22px;background:var(--vm-panel);border:1px solid rgba(255,255,255,.08)}.adminMetric span{font-size:26px}.adminMetric strong{font-size:34px;color:var(--vm-gold)}.adminMetric small{color:var(--muted)}.adminWelcome{grid-column:1/-1}.adminWelcome li{margin:9px 0;color:var(--muted)}
+.adminSection{padding:24px}.adminSectionHead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px}.adminSectionHead h3{margin:0 0 5px}.adminSectionHead p{margin:0;color:var(--muted)}.adminInline{display:flex;gap:8px}.adminInline input{min-width:220px}
+.adminPlayerList{display:grid;gap:9px}.adminPlayerRow{display:grid;grid-template-columns:42px minmax(180px,1fr) 140px auto;gap:10px;align-items:center;padding:10px;border-radius:16px;background:rgba(255,255,255,.025)}.adminAvatar{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(232,189,82,.22),rgba(99,217,139,.16));font-weight:900;color:var(--vm-gold)}.adminPlayerRow label{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:7px;color:var(--muted);font-size:12px}.danger{color:#ff9d9d!important;border-color:rgba(255,90,90,.25)!important}
+.adminRoundGrid,.adminCourseGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.adminRoundCard,.adminCourseCard{display:grid;gap:11px;padding:17px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}.adminRoundCard label,.adminCourseCard label{display:grid;gap:6px;color:var(--muted);font-size:12px}.adminFieldGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.adminGroupsList{display:grid;gap:12px}.adminGroupRound{padding:15px;border-radius:18px;background:rgba(255,255,255,.026);border:1px solid rgba(255,255,255,.07)}.adminGroupRound summary{cursor:pointer;display:flex;justify-content:space-between;gap:12px}.adminGroupRound summary span{color:var(--muted)}.adminGroupCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:15px 0}.adminGroupCard{display:grid;gap:8px;padding:13px;border-radius:15px;background:rgba(0,0,0,.18)}.adminGroupTitle{display:grid;grid-template-columns:1fr 105px;gap:7px}.teeTimeInput{min-width:0}
+.notificationAdmin{text-align:center;padding:38px}.adminBigIcon{font-size:52px}.adminActions{display:flex;justify-content:center;gap:10px;margin:20px 0}.adminLocked{text-align:center;padding:50px}.adminLocked>span{font-size:48px}
+
+@media(max-width:1000px){.adminOverviewGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.adminRoundGrid,.adminCourseGrid,.adminGroupCards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.adminHero{align-items:flex-start;flex-direction:column;padding:22px}.adminOverviewGrid,.adminRoundGrid,.adminCourseGrid,.adminGroupCards{grid-template-columns:1fr}.adminSection{padding:17px}.adminSectionHead{flex-direction:column}.adminInline{width:100%;flex-direction:column}.adminInline input{min-width:0}.adminPlayerRow{grid-template-columns:42px 1fr}.adminPlayerRow label,.adminPlayerRow button{grid-column:2}.adminActions{flex-direction:column}.adminTabs{margin-inline:-4px}}
