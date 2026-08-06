@@ -14,17 +14,19 @@ firebase.initializeApp({
 const messaging = firebase.messaging()
 
 messaging.onBackgroundMessage((payload) => {
+  // Firebase/Chrome har redan visat notisen automatiskt.
+  if (payload.notification) return
+
   const data = payload.data || {}
-  const title = data.title || payload.notification?.title || 'Volvo Masters'
-  const body = data.body || payload.notification?.body || 'Ny händelse'
+  const title = data.title || 'Volvo Masters'
+  const body = data.body || 'Ny händelse'
   const view = data.view || 'home'
 
   self.registration.showNotification(title, {
-  body,
-  icon: "https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png",
-badge: "https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png",
-
-  tag: data.tag || `volvo-masters-${view}`,
+    body,
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge-96.png',
+    tag: data.tag || `volvo-masters-${view}`,
     renotify: true,
     data: {
       url: `/?view=${encodeURIComponent(view)}`,
