@@ -20,10 +20,11 @@ messaging.onBackgroundMessage((payload) => {
   const view = data.view || 'home'
 
   self.registration.showNotification(title, {
-    body,
-    icon: '/icons/icon-192.png',
-    
-    tag: data.tag || `volvo-masters-${view}`,
+  body,
+  icon: '/icons/icon-192.png',
+  badge: '/icons/badge-96.png',
+
+  tag: data.tag || `volvo-masters-${view}`,
     renotify: true,
     data: {
       url: `/?view=${encodeURIComponent(view)}`,
