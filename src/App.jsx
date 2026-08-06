@@ -669,48 +669,307 @@ function Podium({ board }) {
 
 
 function Leaderboard({ board }) {
+  const topThree = board.slice(0, 3)
+  const podiumOrder = [topThree[1], topThree[0], topThree[2]].filter(Boolean)
+  const medals = {
+    0: '🥇',
+    1: '🥈',
+    2: '🥉',
+  }
+
+  function initials(name = '') {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase()
+  }
+
   return (
-    <section className="leaderboardPro">
-      <div className="sectionHead">
-        <h2>Leaderboard</h2>
-        <span>Top 4 justerat mot slope</span>
-      </div>
-
-      <div className="podiumStage">
-        {board.slice(0, 3).map((p, i) => (
-          <div className={`podiumBlock place${i + 1}`} key={p.player}>
-            <span>{["🥇", "🥈", "🥉"][i]}</span>
-            <b>{p.player.split(" ")[0]}</b>
-            <div className="leaderTotals">
-              <strong>{p.total}p</strong>
-              <small>{p.totalGross || 0} brutto · {p.totalNet || 0} netto · {p.totalRawPoints || 0} råpoäng</small>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="panel">
-        {board.map((p, i) => (
-          <div
-            className={`leaderRow enhanced ${i < 3 ? "topThree" : ""}`}
-            key={p.player}
+    <section
+      className="leaderboardPro"
+      style={{
+        display: 'grid',
+        gap: '22px',
+      }}
+    >
+      <div
+        className="sectionHead"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'end',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div>
+          <small
+            style={{
+              display: 'block',
+              marginBottom: '6px',
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: '#d8bd72',
+              fontWeight: 800,
+            }}
           >
-            <span className="rank">
-              {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
-            </span>
+            Volvo Masters 2026
+          </small>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 'clamp(30px, 6vw, 54px)',
+              lineHeight: 1,
+            }}
+          >
+            Leaderboard
+          </h2>
+        </div>
 
-            <div>
-              <b>{p.player}</b>
-              <small>{p.rounds} spelade · bästa: {p.best?.[0]?.adj || 0}p</small>
-            </div>
-
-            <strong>{p.total}p</strong>
-          </div>
-        ))}
+        <span
+          style={{
+            padding: '10px 14px',
+            borderRadius: '999px',
+            border: '1px solid rgba(216, 189, 114, 0.45)',
+            background: 'rgba(216, 189, 114, 0.10)',
+            color: '#f4e5b8',
+            fontWeight: 700,
+          }}
+        >
+          Bästa 4 rundorna räknas
+        </span>
       </div>
+
+      <div
+        className="podiumStage"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gap: '14px',
+          alignItems: 'end',
+        }}
+      >
+        {podiumOrder.map(player => {
+          const realPlace = board.findIndex(item => item.player === player.player)
+          const isWinner = realPlace === 0
+
+          return (
+            <article
+              key={player.player}
+              style={{
+                minHeight: isWinner ? '250px' : '210px',
+                padding: isWinner ? '24px 18px' : '20px 16px',
+                borderRadius: '24px',
+                border: isWinner
+                  ? '1px solid rgba(255, 215, 100, 0.85)'
+                  : '1px solid rgba(255,255,255,0.12)',
+                background: isWinner
+                  ? 'linear-gradient(180deg, rgba(122, 91, 22, 0.96), rgba(26, 55, 40, 0.98))'
+                  : 'linear-gradient(180deg, rgba(36, 73, 54, 0.98), rgba(17, 38, 29, 0.98))',
+                boxShadow: isWinner
+                  ? '0 18px 50px rgba(214, 174, 65, 0.22)'
+                  : '0 14px 38px rgba(0,0,0,0.22)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                textAlign: 'center',
+                transform: isWinner ? 'translateY(-12px)' : 'none',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: isWinner ? '42px' : '34px',
+                  lineHeight: 1,
+                }}
+              >
+                {medals[realPlace]}
+              </div>
+
+              <div
+                style={{
+                  width: isWinner ? '82px' : '68px',
+                  height: isWinner ? '82px' : '68px',
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: isWinner
+                    ? 'linear-gradient(135deg, #f4dc89, #8d6f20)'
+                    : 'linear-gradient(135deg, #3f7858, #1e4331)',
+                  color: isWinner ? '#213024' : '#fff',
+                  border: '3px solid rgba(255,255,255,0.18)',
+                  fontSize: isWinner ? '25px' : '21px',
+                  fontWeight: 900,
+                }}
+              >
+                {initials(player.player)}
+              </div>
+
+              <div>
+                <b
+                  style={{
+                    display: 'block',
+                    fontSize: isWinner ? '21px' : '18px',
+                    marginBottom: '5px',
+                  }}
+                >
+                  {player.player}
+                </b>
+                <small style={{ opacity: 0.72 }}>
+                  {player.rounds} spelade rundor
+                </small>
+              </div>
+
+              <div>
+                <strong
+                  style={{
+                    display: 'block',
+                    fontSize: isWinner ? '36px' : '29px',
+                    color: '#f2d47e',
+                    lineHeight: 1,
+                  }}
+                >
+                  {player.total}p
+                </strong>
+                <small style={{ opacity: 0.72 }}>
+                  Bästa rond {player.best?.[0]?.adj || 0}p
+                </small>
+              </div>
+            </article>
+          )
+        })}
+      </div>
+
+      <div
+        className="panel"
+        style={{
+          padding: '10px',
+          borderRadius: '24px',
+          overflow: 'hidden',
+        }}
+      >
+        {board.map((player, index) => {
+          const isTopThree = index < 3
+
+          return (
+            <div
+              className={`leaderRow enhanced ${isTopThree ? 'topThree' : ''}`}
+              key={player.player}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '50px 52px minmax(0, 1fr) auto',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px',
+                borderRadius: '16px',
+                marginBottom: '8px',
+                background: isTopThree
+                  ? 'linear-gradient(90deg, rgba(216, 189, 114, 0.15), rgba(255,255,255,0.025))'
+                  : 'rgba(255,255,255,0.035)',
+                border: isTopThree
+                  ? '1px solid rgba(216, 189, 114, 0.22)'
+                  : '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <span
+                className="rank"
+                style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontWeight: 900,
+                  fontSize: isTopThree ? '23px' : '18px',
+                }}
+              >
+                {isTopThree ? medals[index] : index + 1}
+              </span>
+
+              <div
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: isTopThree
+                    ? 'linear-gradient(135deg, #b9963a, #4e672f)'
+                    : 'rgba(255,255,255,0.08)',
+                  fontWeight: 900,
+                  fontSize: '14px',
+                }}
+              >
+                {initials(player.player)}
+              </div>
+
+              <div style={{ minWidth: 0 }}>
+                <b
+                  style={{
+                    display: 'block',
+                    fontSize: '17px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {player.player}
+                </b>
+                <small style={{ opacity: 0.7 }}>
+                  {player.rounds} rundor · Snitt {player.avgPoints || 0}p · Bästa {player.best?.[0]?.adj || 0}p
+                </small>
+              </div>
+
+              <div style={{ textAlign: 'right' }}>
+                <strong
+                  style={{
+                    display: 'block',
+                    fontSize: '24px',
+                    color: '#f2d47e',
+                  }}
+                >
+                  {player.total}p
+                </strong>
+                <small style={{ opacity: 0.65 }}>
+                  {player.totalRawPoints || 0} råpoäng
+                </small>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <style>{`
+        @media (max-width: 760px) {
+          .leaderboardPro .podiumStage {
+            grid-template-columns: 1fr 1fr 1fr !important;
+            gap: 8px !important;
+          }
+
+          .leaderboardPro .podiumStage article {
+            min-height: 185px !important;
+            padding: 16px 8px !important;
+            border-radius: 18px !important;
+          }
+
+          .leaderboardPro .podiumStage article:nth-child(2) {
+            min-height: 215px !important;
+          }
+
+          .leaderboardPro .leaderRow.enhanced {
+            grid-template-columns: 38px 42px minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+            padding: 12px 8px !important;
+          }
+
+          .leaderboardPro .leaderRow.enhanced small {
+            font-size: 11px !important;
+          }
+        }
+      `}</style>
     </section>
-  );
+  )
 }
+
 const COURSE_IMAGES = {
   billingen: '/courses/billingen.jpg',
   breviken: '/courses/breviken.jpg',
