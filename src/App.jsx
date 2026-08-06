@@ -1432,15 +1432,185 @@ function AdminPlayerRow({player,hcp,onRename,onHcp,onRemove}) {
   return <div className="adminPlayerRow"><div className="adminAvatar">{player.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><input value={name} onChange={e=>setName(e.target.value)} onBlur={()=>onRename(player,name)}/><label>HCP<input value={hcp} onChange={e=>onHcp(e.target.value)} placeholder="0,0"/></label><button className="danger ghost" onClick={()=>onRemove(player)}>Ta bort</button></div>
 }
 
-function AdminRoundGroups({round,players,onSave}) {
-  const initial = round.groups?.length ? clone(round.groups) : chunkPlayers(players)
-  const [groups,setGroups]=useState(initial)
-  const [times,setTimes]=useState(round.teeTimes||{})
-  useEffect(()=>{setGroups(round.groups?.length?clone(round.groups):chunkPlayers(players));setTimes(round.teeTimes||{})},[round,players])
-  function setPlayer(groupIndex, playerIndex, value){setGroups(gs=>gs.map((g,gi)=>gi===groupIndex?{...g,players:g.players.map((p,pi)=>pi===playerIndex?value:p)}:g))}
-  return <details className="adminGroupRound"><summary><b>Deltävling {round.slot}</b><span>{round.date||'Datum saknas'}</span></summary><div className="adminGroupCards">{groups.map((g,gi)=><div className="adminGroupCard" key={g.id}><div className="adminGroupTitle"><input value={g.name} onChange={e=>setGroups(gs=>gs.map((x,i)=>i===gi?{...x,name:e.target.value}:x))}/><input className="teeTimeInput" type="time" value={times[g.id]||''} onChange={e=>setTimes({...times,[g.id]:e.target.value})}/></div>{g.players.map((p,pi)=><select key={pi} value={p} onChange={e=>setPlayer(gi,pi,e.target.value)}>{players.map(name=><option key={name}>{name}</option>)}</select>)}</div>)}</div><button onClick={()=>onSave(round.slot,groups,times)}>Spara bollar</button></details>
-}
+function AdminRoundGroups({ round, players, onSave }) {
+  const initialGroups = round.groups?.length
+    ? clone(round.groups)
+    : chunkPlayers(players)
 
+  const [groups, setGroups] = useState(initialGroups)
+  const [times, setTimes] = useState(round.teeTimes || {})
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setGroups(
+      round.groups?.length
+        ? clone(round.groups)
+        : chunkPlayers(players)
+    )
+    setTimes(round.teeTimes || {})
+  }, [round, players])
+
+  function setPlayer(groupIndex, playerIndex, value) {
+    setGroups(current =>
+      current.map((group, gi) =>
+        gi === groupIndex
+          ? {
+              ...group,
+              players: group.players.map((player, pi) =>
+                pi === playerIndex ? value : player
+              ),
+            }
+          : group
+      )
+    )
+  }
+
+  async function removePlayerFromRound(groupIndex, playerIndex, playerName) {
+    const shouldRemove = window.confirm(
+      `Ta bort ${playerName} från deltävling ${round.slot}?`
+    )
+
+    if (!shouldRemove) return
+
+    const nextGroups = groups.map((group, gi) =>
+      gi === groupIndex
+        ? {
+            ...group,
+            players: group.players.filter(
+              (_, pi) => pi !== playerIndex
+            ),
+          }
+        : group
+    )
+
+    setGroups(nextGroups)
+    setSaving(true)
+
+    try {
+      await onSave(round.slot, nextGroups, times)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function saveGroups() {
+    setSaving(true)
+
+    try {
+      await onSave(round.slot, groups, times)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <details className="adminGroupRound">
+      <summary>
+        <b>Deltävling {round.slot}</b>
+        <span>{round.date || 'Datum saknas'}</span>
+      </summary>
+
+      <div className="adminGroupCards">
+        {groups.map((group, groupIndex) => (
+          <div className="adminGroupCard" key={group.id}>
+            <div className="adminGroupTitle">
+              <input
+                value={group.name || ''}
+                onChange={event =>
+                  setGroups(current =>
+                    current.map((item, index) =>
+                      index === groupIndex
+                        ? { ...item, name: event.target.value }
+                        : item
+                    )
+                  )
+                }
+              />
+
+              <input
+                className="teeTimeInput"
+                type="time"
+                value={times[group.id] || ''}
+                onChange={event =>
+                  setTimes(current => ({
+                    ...current,
+                    [group.id]: event.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            {(group.players || []).map((player, playerIndex) => (
+              <div
+                className="adminGroupPlayerRow"
+                key={`${group.id}-${playerIndex}`}
+              >
+                <select
+                  value={player}
+                  onChange={event =>
+                    setPlayer(
+                      groupIndex,
+                      playerIndex,
+                      event.target.value
+                    )
+                  }
+                >
+                  {players.map(name => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    if (!saving) {
+                      removePlayerFromRound(groupIndex, playerIndex, player)
+                    }
+                  }}
+                  onKeyDown={event => {
+                    if (!saving && (event.key === 'Enter' || event.key === ' ')) {
+                      removePlayerFromRound(groupIndex, playerIndex, player)
+                    }
+                  }}
+                  style={{
+                    display: 'flex',
+                    width: '120px',
+                    minWidth: '120px',
+                    height: '44px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '10px',
+                    border: '2px solid #ff7b7b',
+                    background: '#8b1e1e',
+                    color: '#ffffff',
+                    fontWeight: 900,
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    position: 'relative',
+                    zIndex: 9999,
+                    flexShrink: 0,
+                  }}
+                >
+                  TA BORT
+                </div>
+              </div>
+            ))}
+
+            {!group.players?.length && (
+              <p className="hint">Inga spelare i denna boll.</p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button onClick={saveGroups} disabled={saving}>
+        {saving ? 'Sparar…' : 'Spara bollar'}
+      </button>
+    </details>
+  )
+}
 function Chat({players, identity}) {
   const [messages, setMessages] = useState([])
   const [name, setName] = useState(identity?.marker || players[0] || '')
