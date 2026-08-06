@@ -160,6 +160,7 @@ function useTournamentData() {
     scores: buildScores(DEFAULT_PLAYERS, DEFAULT_ROUNDS),
     playerHcp: {},
     playerPhotos: {},
+    heroImages: {},
     gallery: {},
     comments: {}
   })
@@ -179,6 +180,7 @@ function useTournamentData() {
         scores: data.scores || buildScores(players, rounds),
         playerHcp: data.playerHcp || {},
         playerPhotos: data.playerPhotos || {},
+        heroImages: data.heroImages || {},
         gallery: data.gallery || {},
         comments: data.comments || {}
       })
@@ -243,7 +245,31 @@ await save({
     return url
   }
 
-  return { ...state, save, uploadMedia, uploadPlayerPhoto }
+  async function uploadHeroImage(viewId, file) {
+    if (!viewId || !file) return
+
+    if (!file.type?.startsWith('image/')) {
+      throw new Error('Välj en bildfil.')
+    }
+
+    const extension = file.name?.split('.').pop() || 'jpg'
+    const id = `${viewId}-${Date.now()}.${extension}`
+    const fileRef = ref(storage, `hero-images/${id}`)
+
+    await uploadBytes(fileRef, file)
+    const url = await getDownloadURL(fileRef)
+
+    await save({
+      heroImages: {
+        ...(state.heroImages || {}),
+        [viewId]: url,
+      },
+    })
+
+    return url
+  }
+
+  return { ...state, save, uploadMedia, uploadPlayerPhoto, uploadHeroImage }
 }
 
 function courseFor(courses, round) {
@@ -331,6 +357,7 @@ function App() {
   const data = useTournamentData()
   const uploadMedia = data.uploadMedia
   const uploadPlayerPhoto = data.uploadPlayerPhoto
+  const uploadHeroImage = data.uploadHeroImage
   const { identity, update: updateIdentity, clear: clearIdentity } = useLocalIdentity()
   const [view, setView] = useState('home')
   const [admin, setAdmin] = useState(false)
@@ -493,6 +520,7 @@ function App() {
           identity={identity}
           board={board}
           admin={admin}
+          heroImages={data.heroImages}
         />
       )}
 
@@ -503,6 +531,7 @@ function App() {
   setView={setView}
   rounds={data.rounds}
   setSelectedRound={setSelectedRound}
+  heroImages={data.heroImages}
 />}
       {view === 'leaderboard' && <Leaderboard board={board} playerPhotos={data.playerPhotos} />}
       {view === 'rounds' && <Rounds admin={admin} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} setView={setView} setSelectedRound={setSelectedRound} updateRoundGroups={updateRoundGroups} />}
@@ -532,6 +561,8 @@ function App() {
           playerHcp={data.playerHcp}
           playerPhotos={data.playerPhotos}
           uploadPlayerPhoto={uploadPlayerPhoto}
+          heroImages={data.heroImages}
+          uploadHeroImage={uploadHeroImage}
           save={data.save}
           updateRoundGroups={updateRoundGroups}
           enableNotifications={enableNotificationsForCurrentDevice}
@@ -612,7 +643,7 @@ function Topbar({ loading, admin, identity, clearIdentity }) {
   
 
 
-function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin }) {
+function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin, heroImages = {} }) {
   const round =
     rounds.find(item => item.slot === Number(selectedRound)) ||
     rounds[0]
@@ -695,6 +726,8 @@ function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin
   const content = heroContent[view]
   if (!content) return null
 
+  const heroImage = heroImages[view] || content.image
+
   return (
     <section
       className={`viewHero viewHero-${view}`}
@@ -712,7 +745,7 @@ function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin
           rgba(2, 18, 11, 0.94) 0%,
           rgba(2, 18, 11, 0.72) 48%,
           rgba(2, 18, 11, 0.28) 100%
-        ), url(${content.image})`,
+        ), url(${heroImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         border: '1px solid rgba(216, 189, 114, 0.25)',
@@ -811,7 +844,7 @@ function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin
 }
 
 
-function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound}) {
+function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound, heroImages = {}}) {
   const nextTeeTimes = (nextRound.groups || [])
     .map((group, index) => ({
       id: group.id ?? index + 1,
@@ -832,7 +865,7 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound})
         backgroundImage: `linear-gradient(
           rgba(3, 19, 12, 0.35),
           rgba(3, 19, 12, 0.82)
-        ), url(${COURSE_IMAGES[
+        ), url(${heroImages.home || COURSE_IMAGES[
   nextCourse.name
     .toLowerCase()
     .replace(" gk", "")
@@ -1868,7 +1901,7 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
 }
 
 
-function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, uploadPlayerPhoto, save, updateRoundGroups, enableNotifications, notificationsEnabled }) {
+function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, uploadPlayerPhoto, heroImages = {}, uploadHeroImage, save, updateRoundGroups, enableNotifications, notificationsEnabled }) {
   const [tab, setTab] = useState('overview')
   const [newPlayer, setNewPlayer] = useState('')
   const [status, setStatus] = useState('')
@@ -1923,7 +1956,7 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
     await flash('Banorna är sparade.', () => save({courses:courseDrafts}))
   }
 
-  const tabs = [['overview','Översikt'],['players','Spelare'],['rounds','Deltävlingar'],['groups','Bollar'],['courses','Banor'],['notifications','Notiser']]
+  const tabs = [['overview','Översikt'],['players','Spelare'],['rounds','Deltävlingar'],['groups','Bollar'],['courses','Banor'],['heroes','Hero-bilder'],['notifications','Notiser']]
   return <section className="adminPage">
     <div className="adminHero">
       <div><small>VOLVO MASTERS CONTROL CENTER</small><h2>Adminpanel</h2><p>Ändringar sparas direkt i Firebase och syns för alla.</p></div>
@@ -1970,6 +2003,21 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
       <div className="adminCourseGrid">{courseDrafts.map(c => <div className="adminCourseCard" key={c.id}><h4>{c.name}</h4><label>Namn<input value={c.name} onChange={e=>updateCourse(c.id,{name:e.target.value})}/></label><div className="adminFieldGrid"><label>Tee<input value={c.tee||''} onChange={e=>updateCourse(c.id,{tee:e.target.value})}/></label><label>Par<input inputMode="numeric" value={c.par||''} onChange={e=>updateCourse(c.id,{par:Number(e.target.value)||''})}/></label><label>CR<input inputMode="decimal" value={c.cr||''} onChange={e=>updateCourse(c.id,{cr:Number(e.target.value)||''})}/></label><label>Slope<input inputMode="numeric" value={c.slope||''} onChange={e=>updateCourse(c.id,{slope:Number(e.target.value)||''})}/></label></div></div>)}</div>
     </div>}
 
+    {tab==='heroes' && (
+      <HeroImageAdmin
+        heroImages={heroImages}
+        onUpload={uploadHeroImage}
+        onRemove={viewId =>
+          save({
+            heroImages: {
+              ...heroImages,
+              [viewId]: '',
+            },
+          })
+        }
+      />
+    )}
+
     {tab==='notifications' && <div className="panel adminSection notificationAdmin">
       <span className="adminBigIcon">🔔</span><h3>Notiser</h3><p>Aktivera notiser på den här enheten. Testknappen visar en lokal notis så att du kan kontrollera telefonens behörighet.</p>
       <div className="adminActions"><button onClick={enableNotifications}>{notificationsEnabled?'Registrera om enheten':'Aktivera notiser'}</button><button className="ghost" onClick={()=>{ if(Notification.permission==='granted') new Notification('Volvo Masters',{body:'Testnotisen fungerar på den här enheten.',icon:'/favicon.svg'}); else alert('Aktivera notiser först.') }}>Skicka lokal testnotis</button></div>
@@ -1977,6 +2025,147 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
     </div>}
   </section>
 }
+
+function HeroImageAdmin({ heroImages = {}, onUpload, onRemove }) {
+  const [uploading, setUploading] = useState('')
+
+  const views = [
+    ['home', '🏠 Hem', '/courses/skovde.jpg'],
+    ['leaderboard', '🏆 Leaderboard', '/courses/skovde.jpg'],
+    ['rounds', '⛳ Deltävlingar', '/courses/breviken.jpg'],
+    ['score', '✍️ Scorekort', '/courses/skovde.jpg'],
+    ['players', '👥 Spelare', '/courses/knistad.jpg'],
+    ['stats', '📊 Statistik', '/courses/mariestad.jpg'],
+    ['chat', '💬 Chat', '/courses/billingen.jpg'],
+    ['live', '🔴 Live', '/courses/skovde.jpg'],
+    ['gallery', '📷 Galleri', '/courses/lacko.jpg'],
+    ['admin', '👑 Admin', '/courses/knistad.jpg'],
+  ]
+
+  async function handleUpload(viewId, event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploading(viewId)
+    try {
+      await onUpload(viewId, file)
+      alert('Hero-bilden är uppdaterad.')
+    } catch (error) {
+      console.error(error)
+      alert(error.message || 'Bilden kunde inte laddas upp.')
+    } finally {
+      setUploading('')
+      event.target.value = ''
+    }
+  }
+
+  return (
+    <div className="panel adminSection">
+      <div className="adminSectionHead">
+        <div>
+          <h3>Hero-bilder</h3>
+          <p>Byt sidornas stora bakgrundsbilder direkt från telefonen.</p>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '16px',
+        }}
+      >
+        {views.map(([viewId, label, fallback]) => {
+          const currentImage = heroImages[viewId] || fallback
+          const isUploading = uploading === viewId
+
+          return (
+            <article
+              key={viewId}
+              style={{
+                overflow: 'hidden',
+                borderRadius: '18px',
+                border: '1px solid rgba(255,255,255,0.10)',
+                background: 'rgba(255,255,255,0.035)',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  height: '150px',
+                  backgroundImage: `linear-gradient(rgba(3,18,11,0.18), rgba(3,18,11,0.72)), url(${currentImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  padding: '16px',
+                }}
+              >
+                <strong style={{ fontSize: '19px', color: '#fff' }}>
+                  {label}
+                </strong>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gap: '10px',
+                  padding: '14px',
+                }}
+              >
+                <label
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    width: '100%',
+                    minHeight: '48px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #9b7a26, #3f6f49)',
+                    border: '1px solid rgba(244,223,156,0.70)',
+                    color: '#fff',
+                    fontWeight: 900,
+                    cursor: isUploading ? 'wait' : 'pointer',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {isUploading ? 'Laddar upp…' : '📷 Byt hero-bild'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={event => handleUpload(viewId, event)}
+                    disabled={isUploading}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: isUploading ? 'wait' : 'pointer',
+                    }}
+                  />
+                </label>
+
+                {heroImages[viewId] && (
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => onRemove(viewId)}
+                    disabled={isUploading}
+                  >
+                    Återställ standardbild
+                  </button>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 
 function AdminPlayerRow({
   player,
@@ -1988,10 +2177,10 @@ function AdminPlayerRow({
   onRemovePhoto,
   onRemove,
 }) {
-  const [name,setName]=useState(player)
-  const [uploading,setUploading]=useState(false)
+  const [name, setName] = useState(player)
+  const [uploading, setUploading] = useState(false)
 
-  useEffect(()=>setName(player),[player])
+  useEffect(() => setName(player), [player])
 
   async function handlePhoto(event) {
     const file = event.target.files?.[0]
@@ -2016,86 +2205,134 @@ function AdminPlayerRow({
   }
 
   return (
-    <div className="adminPlayerRow" style={{ alignItems:'center' }}>
+    <div
+      className="adminPlayerRow"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '64px minmax(0, 1fr)',
+        gap: '12px',
+        alignItems: 'center',
+        padding: '14px',
+        borderRadius: '16px',
+        background: 'rgba(255,255,255,0.035)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        overflow: 'visible',
+      }}
+    >
       <div
         className="adminAvatar"
         style={{
-          overflow:'hidden',
-          width:'58px',
-          height:'58px',
-          minWidth:'58px',
+          overflow: 'hidden',
+          width: '58px',
+          height: '58px',
+          minWidth: '58px',
+          borderRadius: '50%',
+          display: 'grid',
+          placeItems: 'center',
         }}
       >
         {photo ? (
           <img
             src={photo}
             alt={player}
-            style={{ width:'100%', height:'100%', objectFit:'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
-          player.split(' ').map(x=>x[0]).join('').slice(0,2)
+          player.split(' ').map(x => x[0]).join('').slice(0, 2)
         )}
       </div>
 
-      <input
-        value={name}
-        onChange={e=>setName(e.target.value)}
-        onBlur={()=>onRename(player,name)}
-      />
+      <div style={{ minWidth: 0 }}>
+        <label style={{ display: 'block' }}>
+          Namn
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onBlur={() => onRename(player, name)}
+            style={{ width: '100%' }}
+          />
+        </label>
 
-      <label>
-        HCP
-        <input
-          value={hcp}
-          onChange={e=>onHcp(e.target.value)}
-          placeholder="0,0"
-        />
-      </label>
+        <label style={{ display: 'block', marginTop: '10px' }}>
+          HCP
+          <input
+            value={hcp}
+            onChange={e => onHcp(e.target.value)}
+            placeholder="0,0"
+            style={{ width: '100%' }}
+          />
+        </label>
+      </div>
 
-      <label
+      <div
         style={{
-          display:'inline-flex',
-          alignItems:'center',
-          justifyContent:'center',
-          minHeight:'44px',
-          padding:'10px 14px',
-          borderRadius:'10px',
-          background:'rgba(216, 189, 114, 0.14)',
-          border:'1px solid rgba(216, 189, 114, 0.45)',
-          color:'#f4df9c',
-          fontWeight:800,
-          cursor:uploading ? 'wait' : 'pointer',
-          whiteSpace:'nowrap',
+          gridColumn: '1 / -1',
+          display: 'grid',
+          gridTemplateColumns: '1fr',
+          gap: '10px',
+          marginTop: '4px',
         }}
       >
-        {uploading ? 'Laddar upp…' : photo ? 'Byt bild' : 'Lägg till bild'}
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handlePhoto}
+        <label
+          style={{
+            display: 'flex',
+            visibility: 'visible',
+            opacity: 1,
+            width: '100%',
+            minHeight: '48px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #9b7a26, #3f6f49)',
+            border: '1px solid rgba(244, 223, 156, 0.7)',
+            color: '#ffffff',
+            fontWeight: 900,
+            cursor: uploading ? 'wait' : 'pointer',
+            boxSizing: 'border-box',
+            position: 'relative',
+            zIndex: 9999,
+          }}
+        >
+          {uploading ? 'Laddar upp bild…' : photo ? '📷 Byt bild' : '📷 Lägg till bild'}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePhoto}
+            disabled={uploading}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              opacity: 0,
+              cursor: uploading ? 'wait' : 'pointer',
+            }}
+          />
+        </label>
+
+        {photo && (
+          <button
+            type="button"
+            className="ghost"
+            onClick={onRemovePhoto}
+            disabled={uploading}
+            style={{ width: '100%', minHeight: '44px' }}
+          >
+            Ta bort bild
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="danger ghost"
+          onClick={() => onRemove(player)}
           disabled={uploading}
-          style={{ display:'none' }}
-        />
-      </label>
-
-      <button
-        type="button"
-        className="ghost"
-        onClick={onRemovePhoto}
-        disabled={!photo || uploading}
-      >
-        Ta bort bild
-      </button>
-
-      <button
-        type="button"
-        className="danger ghost"
-        onClick={()=>onRemove(player)}
-        disabled={uploading}
-      >
-        Ta bort spelare
-      </button>
+          style={{ width: '100%', minHeight: '44px' }}
+        >
+          Ta bort spelare
+        </button>
+      </div>
     </div>
   )
 }
