@@ -77,11 +77,17 @@ exports.notifyNewChatMessage = onDocumentCreated(
           priority: 'high',
         },
         webpush: {
-          headers: { Urgency: 'high' },
-          fcmOptions: {
-            link: '/?view=chat',
-          },
-        },
+  headers: {
+    Urgency: 'high',
+  },
+  notification: {
+    icon: 'https://volvo-masters.vercel.app/icons/icon-192.png',
+    
+  },
+  fcmOptions: {
+    link: 'https://volvo-masters.vercel.app/?view=chat',
+  },
+},
       })
       console.log('Pushresultat:', {
   lyckades: response.successCount,
