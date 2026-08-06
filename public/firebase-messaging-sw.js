@@ -21,8 +21,8 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(title, {
   body,
-  icon: '/icons/icon-192.png',
-  badge: '/icons/badge-96.png',
+  icon: "https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png",
+badge: "https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png",
 
   tag: data.tag || `volvo-masters-${view}`,
     renotify: true,
