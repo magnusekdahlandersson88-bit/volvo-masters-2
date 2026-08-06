@@ -159,6 +159,7 @@ function useTournamentData() {
     rounds: DEFAULT_ROUNDS,
     scores: buildScores(DEFAULT_PLAYERS, DEFAULT_ROUNDS),
     playerHcp: {},
+    playerPhotos: {},
     gallery: {},
     comments: {}
   })
@@ -177,6 +178,7 @@ function useTournamentData() {
         rounds,
         scores: data.scores || buildScores(players, rounds),
         playerHcp: data.playerHcp || {},
+        playerPhotos: data.playerPhotos || {},
         gallery: data.gallery || {},
         comments: data.comments || {}
       })
@@ -216,7 +218,32 @@ await save({
 
 
 
-  return { ...state, save, uploadMedia }
+  async function uploadPlayerPhoto(playerName, file) {
+    if (!playerName || !file) return
+
+    const safeName = playerName
+      .toLowerCase()
+      .replace(/[^a-z0-9åäö]+/gi, '-')
+      .replace(/^-+|-+$/g, '')
+
+    const extension = file.name?.split('.').pop() || 'jpg'
+    const id = `${safeName}-${Date.now()}.${extension}`
+    const fileRef = ref(storage, `player-photos/${id}`)
+
+    await uploadBytes(fileRef, file)
+    const url = await getDownloadURL(fileRef)
+
+    await save({
+      playerPhotos: {
+        ...(state.playerPhotos || {}),
+        [playerName]: url,
+      },
+    })
+
+    return url
+  }
+
+  return { ...state, save, uploadMedia, uploadPlayerPhoto }
 }
 
 function courseFor(courses, round) {
@@ -303,6 +330,7 @@ function useLocalIdentity() {
 function App() {
   const data = useTournamentData()
   const uploadMedia = data.uploadMedia
+  const uploadPlayerPhoto = data.uploadPlayerPhoto
   const { identity, update: updateIdentity, clear: clearIdentity } = useLocalIdentity()
   const [view, setView] = useState('home')
   const [admin, setAdmin] = useState(false)
@@ -456,6 +484,18 @@ function App() {
     </button>
   )}
 </div>
+      {view !== 'home' && (
+        <ViewHero
+          view={view}
+          rounds={data.rounds}
+          courses={data.courses}
+          selectedRound={selectedRound}
+          identity={identity}
+          board={board}
+          admin={admin}
+        />
+      )}
+
       {view === 'home' && <Home
   board={board}
   nextRound={nextRound}
@@ -464,7 +504,7 @@ function App() {
   rounds={data.rounds}
   setSelectedRound={setSelectedRound}
 />}
-      {view === 'leaderboard' && <Leaderboard board={board} />}
+      {view === 'leaderboard' && <Leaderboard board={board} playerPhotos={data.playerPhotos} />}
       {view === 'rounds' && <Rounds admin={admin} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} setView={setView} setSelectedRound={setSelectedRound} updateRoundGroups={updateRoundGroups} />}
       {view === 'score' && <BallScorecard admin={admin} identity={identity} updateIdentity={updateIdentity} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} selectedRound={selectedRound} setSelectedRound={setSelectedRound} updateHole={updateHole} updateHcp={updateHcp} />}
       {view === 'live' && (
@@ -475,7 +515,7 @@ function App() {
     players={data.players}
   />
 )}
-      {view === 'players' && <Players players={data.players} board={board} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} updateHcp={updateHcp} admin={admin} />}
+      {view === 'players' && <Players players={data.players} board={board} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} playerPhotos={data.playerPhotos} updateHcp={updateHcp} admin={admin} />}
       {view === 'stats' && <Stats board={board} rounds={data.rounds} players={data.players} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} />}
       {view === 'chat' && <Chat players={data.players} identity={identity} />}
       {view === "gallery" && (
@@ -490,6 +530,8 @@ function App() {
           rounds={data.rounds}
           courses={data.courses}
           playerHcp={data.playerHcp}
+          playerPhotos={data.playerPhotos}
+          uploadPlayerPhoto={uploadPlayerPhoto}
           save={data.save}
           updateRoundGroups={updateRoundGroups}
           enableNotifications={enableNotificationsForCurrentDevice}
@@ -568,6 +610,205 @@ function Topbar({ loading, admin, identity, clearIdentity }) {
   )
 }
   
+
+
+function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin }) {
+  const round =
+    rounds.find(item => item.slot === Number(selectedRound)) ||
+    rounds[0]
+
+  const course = courseFor(courses, round)
+  const leader = board?.[0]
+
+  const heroContent = {
+    leaderboard: {
+      eyebrow: 'Säsongsställning',
+      title: 'Leaderboard',
+      subtitle: leader
+        ? `${leader.player} leder på ${leader.total} poäng`
+        : 'Säsongens ranking och toppresultat',
+      badge: '🏆 Bästa 4 räknas',
+      image: '/courses/skovde.jpg',
+    },
+    rounds: {
+      eyebrow: 'Tävlingskalender',
+      title: 'Deltävlingar',
+      subtitle: `${rounds.length} rundor · Se banor, resultat och scorekort`,
+      badge: '⛳ Volvo Masters Tour',
+      image: '/courses/breviken.jpg',
+    },
+    score: {
+      eyebrow: `Deltävling ${round?.slot || ''}`,
+      title: 'Scorekort',
+      subtitle: `${course?.name || 'Golfbana'} · ${round?.date || 'Datum kommer'}`,
+      badge: identity?.marker
+        ? `✍️ Markör: ${identity.marker}`
+        : '✍️ Välj markör',
+      image: getCourseImage(course),
+    },
+    players: {
+      eyebrow: 'Spelarfältet',
+      title: 'Spelare',
+      subtitle: `${board?.length || 0} deltagare · Profiler, form och säsongsresultat`,
+      badge: '👥 Volvo Masters',
+      image: '/courses/knistad.jpg',
+    },
+    stats: {
+      eyebrow: 'Säsongen i siffror',
+      title: 'Statistik',
+      subtitle: 'Birdies, rekord, formkurvor och de bästa prestationerna',
+      badge: '📊 Data från alla rundor',
+      image: '/courses/mariestad.jpg',
+    },
+    chat: {
+      eyebrow: 'Klubbhuset',
+      title: 'Chat',
+      subtitle: 'Snack, uppdateringar och information från tävlingen',
+      badge: '💬 Live-konversation',
+      image: '/courses/billingen.jpg',
+    },
+    live: {
+      eyebrow: 'Direkt från banan',
+      title: 'Live',
+      subtitle: 'Följ bollarna, hål för hål, medan tävlingen pågår',
+      badge: '🔴 LIVE',
+      image: '/courses/skovde.jpg',
+    },
+    gallery: {
+      eyebrow: 'Volvo Masters-minnen',
+      title: 'Galleri',
+      subtitle: 'Bilder och ögonblick från banorna och tävlingarna',
+      badge: '📷 Foto & video',
+      image: '/courses/lacko.jpg',
+    },
+    admin: {
+      eyebrow: 'Volvo Masters Control Center',
+      title: 'Adminpanel',
+      subtitle: admin
+        ? 'Hantera spelare, bollar, banor och tävlingar'
+        : 'Admininloggning krävs',
+      badge: admin ? '🟢 Admin aktiv' : '🔒 Låst',
+      image: '/courses/knistad.jpg',
+    },
+  }
+
+  const content = heroContent[view]
+  if (!content) return null
+
+  return (
+    <section
+      className={`viewHero viewHero-${view}`}
+      style={{
+        position: 'relative',
+        minHeight: '260px',
+        marginBottom: '24px',
+        borderRadius: '28px',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'flex-end',
+        padding: 'clamp(24px, 5vw, 48px)',
+        backgroundImage: `linear-gradient(
+          90deg,
+          rgba(2, 18, 11, 0.94) 0%,
+          rgba(2, 18, 11, 0.72) 48%,
+          rgba(2, 18, 11, 0.28) 100%
+        ), url(${content.image})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        border: '1px solid rgba(216, 189, 114, 0.25)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.28)',
+      }}
+    >
+      <div style={{ position: 'relative', zIndex: 2, maxWidth: '720px' }}>
+        <small
+          style={{
+            display: 'block',
+            marginBottom: '10px',
+            color: '#e2c675',
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            fontWeight: 900,
+          }}
+        >
+          {content.eyebrow}
+        </small>
+
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 'clamp(38px, 7vw, 72px)',
+            lineHeight: 0.95,
+            letterSpacing: '-0.035em',
+            color: '#fffdf2',
+            textShadow: '0 3px 18px rgba(0,0,0,0.35)',
+          }}
+        >
+          {content.title}
+        </h1>
+
+        <p
+          style={{
+            margin: '16px 0 20px',
+            maxWidth: '650px',
+            fontSize: 'clamp(16px, 2.2vw, 20px)',
+            color: 'rgba(255,255,255,0.82)',
+            lineHeight: 1.45,
+          }}
+        >
+          {content.subtitle}
+        </p>
+
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: '40px',
+            padding: '9px 14px',
+            borderRadius: '999px',
+            background: 'rgba(8, 35, 23, 0.72)',
+            border: '1px solid rgba(226, 198, 117, 0.55)',
+            color: '#f4df9c',
+            fontWeight: 800,
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          {content.badge}
+        </span>
+      </div>
+
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 30%, rgba(0,0,0,0.18))',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <style>{`
+        @media (max-width: 700px) {
+          .viewHero {
+            min-height: 215px !important;
+            padding: 24px 20px !important;
+            border-radius: 22px !important;
+            background-position: center !important;
+          }
+
+          .viewHero h1 {
+            font-size: 42px !important;
+          }
+
+          .viewHero p {
+            font-size: 15px !important;
+            margin: 12px 0 16px !important;
+          }
+        }
+      `}</style>
+    </section>
+  )
+}
 
 
 function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound}) {
@@ -668,7 +909,7 @@ function Podium({ board }) {
 }
 
 
-function Leaderboard({ board }) {
+function Leaderboard({ board, playerPhotos = {} }) {
   const topThree = board.slice(0, 3)
   const podiumOrder = [topThree[1], topThree[0], topThree[2]].filter(Boolean)
   const medals = {
@@ -793,6 +1034,7 @@ function Leaderboard({ board }) {
                   width: isWinner ? '82px' : '68px',
                   height: isWinner ? '82px' : '68px',
                   borderRadius: '50%',
+                  overflow: 'hidden',
                   display: 'grid',
                   placeItems: 'center',
                   background: isWinner
@@ -804,7 +1046,23 @@ function Leaderboard({ board }) {
                   fontWeight: 900,
                 }}
               >
-                {initials(player.player)}
+                {playerPhotos[player.player] ? (
+                  <img
+                    src={playerPhotos[player.player]}
+                    alt={player.player}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                    onError={event => {
+                      event.currentTarget.style.display = 'none'
+                      event.currentTarget.parentElement.textContent = initials(player.player)
+                    }}
+                  />
+                ) : (
+                  initials(player.player)
+                )}
               </div>
 
               <div>
@@ -890,6 +1148,7 @@ function Leaderboard({ board }) {
                   width: '46px',
                   height: '46px',
                   borderRadius: '50%',
+                  overflow: 'hidden',
                   display: 'grid',
                   placeItems: 'center',
                   background: isTopThree
@@ -899,7 +1158,23 @@ function Leaderboard({ board }) {
                   fontSize: '14px',
                 }}
               >
-                {initials(player.player)}
+                {playerPhotos[player.player] ? (
+                  <img
+                    src={playerPhotos[player.player]}
+                    alt={player.player}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                    onError={event => {
+                      event.currentTarget.style.display = 'none'
+                      event.currentTarget.parentElement.textContent = initials(player.player)
+                    }}
+                  />
+                ) : (
+                  initials(player.player)
+                )}
               </div>
 
               <div style={{ minWidth: 0 }}>
@@ -1403,7 +1678,7 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
   </section>
 }
 
-function Players({ players, board, rounds, courses, scores, playerHcp, updateHcp, admin }) {
+function Players({ players, board, rounds, courses, scores, playerHcp, playerPhotos = {}, updateHcp, admin }) {
   const [selected, setSelected] = useState(players[0] || '')
   const [selectedScorecard, setSelectedScorecard] = useState(null)
   const row = board.find(item => item.player === selected)
@@ -1428,7 +1703,15 @@ function Players({ players, board, rounds, courses, scores, playerHcp, updateHcp
 
   return <section className="playersPro">
     <div className="panel playerHero">
-      <div className="bigAvatar">{initials}</div>
+      <div className="bigAvatar" style={{ overflow:'hidden' }}>
+        {playerPhotos[selected] ? (
+          <img
+            src={playerPhotos[selected]}
+            alt={selected}
+            style={{ width:'100%', height:'100%', objectFit:'cover' }}
+          />
+        ) : initials}
+      </div>
       <div>
         <small>Spelarprofil</small>
         <h2>{selected}</h2>
@@ -1585,7 +1868,7 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
 }
 
 
-function AdminPanel({ players, rounds, courses, playerHcp, save, updateRoundGroups, enableNotifications, notificationsEnabled }) {
+function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, uploadPlayerPhoto, save, updateRoundGroups, enableNotifications, notificationsEnabled }) {
   const [tab, setTab] = useState('overview')
   const [newPlayer, setNewPlayer] = useState('')
   const [status, setStatus] = useState('')
@@ -1659,7 +1942,17 @@ function AdminPanel({ players, rounds, courses, playerHcp, save, updateRoundGrou
 
     {tab==='players' && <div className="panel adminSection">
       <div className="adminSectionHead"><div><h3>Hantera spelare</h3><p>Lägg till, byt namn, ta bort och ändra HCP.</p></div><div className="adminInline"><input value={newPlayer} onChange={e=>setNewPlayer(e.target.value)} placeholder="Nytt spelarnamn"/><button onClick={addPlayer}>Lägg till</button></div></div>
-      <div className="adminPlayerList">{players.map(player => <AdminPlayerRow key={player} player={player} hcp={playerHcp[player] || ''} onRename={renamePlayer} onHcp={value=>save({playerHcp:{...playerHcp,[player]:value}})} onRemove={removePlayer}/>)}</div>
+      <div className="adminPlayerList">{players.map(player => <AdminPlayerRow
+        key={player}
+        player={player}
+        hcp={playerHcp[player] || ''}
+        photo={playerPhotos[player] || ''}
+        onRename={renamePlayer}
+        onHcp={value=>save({playerHcp:{...playerHcp,[player]:value}})}
+        onUploadPhoto={file=>uploadPlayerPhoto(player, file)}
+        onRemovePhoto={()=>save({playerPhotos:{...playerPhotos,[player]:''}})}
+        onRemove={removePlayer}
+      />)}</div>
     </div>}
 
     {tab==='rounds' && <div className="panel adminSection">
@@ -1685,10 +1978,126 @@ function AdminPanel({ players, rounds, courses, playerHcp, save, updateRoundGrou
   </section>
 }
 
-function AdminPlayerRow({player,hcp,onRename,onHcp,onRemove}) {
+function AdminPlayerRow({
+  player,
+  hcp,
+  photo,
+  onRename,
+  onHcp,
+  onUploadPhoto,
+  onRemovePhoto,
+  onRemove,
+}) {
   const [name,setName]=useState(player)
+  const [uploading,setUploading]=useState(false)
+
   useEffect(()=>setName(player),[player])
-  return <div className="adminPlayerRow"><div className="adminAvatar">{player.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><input value={name} onChange={e=>setName(e.target.value)} onBlur={()=>onRename(player,name)}/><label>HCP<input value={hcp} onChange={e=>onHcp(e.target.value)} placeholder="0,0"/></label><button className="danger ghost" onClick={()=>onRemove(player)}>Ta bort</button></div>
+
+  async function handlePhoto(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type?.startsWith('image/')) {
+      alert('Välj en bildfil.')
+      event.target.value = ''
+      return
+    }
+
+    setUploading(true)
+    try {
+      await onUploadPhoto(file)
+    } catch (error) {
+      console.error(error)
+      alert('Bilden kunde inte laddas upp. Försök igen.')
+    } finally {
+      setUploading(false)
+      event.target.value = ''
+    }
+  }
+
+  return (
+    <div className="adminPlayerRow" style={{ alignItems:'center' }}>
+      <div
+        className="adminAvatar"
+        style={{
+          overflow:'hidden',
+          width:'58px',
+          height:'58px',
+          minWidth:'58px',
+        }}
+      >
+        {photo ? (
+          <img
+            src={photo}
+            alt={player}
+            style={{ width:'100%', height:'100%', objectFit:'cover' }}
+          />
+        ) : (
+          player.split(' ').map(x=>x[0]).join('').slice(0,2)
+        )}
+      </div>
+
+      <input
+        value={name}
+        onChange={e=>setName(e.target.value)}
+        onBlur={()=>onRename(player,name)}
+      />
+
+      <label>
+        HCP
+        <input
+          value={hcp}
+          onChange={e=>onHcp(e.target.value)}
+          placeholder="0,0"
+        />
+      </label>
+
+      <label
+        style={{
+          display:'inline-flex',
+          alignItems:'center',
+          justifyContent:'center',
+          minHeight:'44px',
+          padding:'10px 14px',
+          borderRadius:'10px',
+          background:'rgba(216, 189, 114, 0.14)',
+          border:'1px solid rgba(216, 189, 114, 0.45)',
+          color:'#f4df9c',
+          fontWeight:800,
+          cursor:uploading ? 'wait' : 'pointer',
+          whiteSpace:'nowrap',
+        }}
+      >
+        {uploading ? 'Laddar upp…' : photo ? 'Byt bild' : 'Lägg till bild'}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handlePhoto}
+          disabled={uploading}
+          style={{ display:'none' }}
+        />
+      </label>
+
+      <button
+        type="button"
+        className="ghost"
+        onClick={onRemovePhoto}
+        disabled={!photo || uploading}
+      >
+        Ta bort bild
+      </button>
+
+      <button
+        type="button"
+        className="danger ghost"
+        onClick={()=>onRemove(player)}
+        disabled={uploading}
+      >
+        Ta bort spelare
+      </button>
+    </div>
+  )
 }
 
 function AdminRoundGroups({ round, players, onSave }) {
