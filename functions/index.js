@@ -82,7 +82,7 @@ exports.notifyNewChatMessage = onDocumentCreated(
   },
   notification: {
     icon: 'https://volvo-masters.vercel.app/icons/icon-192.png',
-    
+    badge: 'https://volvo-masters.vercel.app/icons/badge-96.png',
   },
   fcmOptions: {
     link: 'https://volvo-masters.vercel.app/?view=chat',
