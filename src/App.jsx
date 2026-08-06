@@ -1440,6 +1440,7 @@ function AdminRoundGroups({ round, players, onSave }) {
   const [groups, setGroups] = useState(initialGroups)
   const [times, setTimes] = useState(round.teeTimes || {})
   const [saving, setSaving] = useState(false)
+  const [addChoices, setAddChoices] = useState({})
 
   useEffect(() => {
     setGroups(
@@ -1448,7 +1449,15 @@ function AdminRoundGroups({ round, players, onSave }) {
         : chunkPlayers(players)
     )
     setTimes(round.teeTimes || {})
+    setAddChoices({})
   }, [round, players])
+
+  const usedPlayers = new Set(
+    groups.flatMap(group => group.players || [])
+  )
+  const availablePlayers = players.filter(
+    player => !usedPlayers.has(player)
+  )
 
   function setPlayer(groupIndex, playerIndex, value) {
     setGroups(current =>
@@ -1484,20 +1493,47 @@ function AdminRoundGroups({ round, players, onSave }) {
     )
 
     setGroups(nextGroups)
-    setSaving(true)
+  }
 
-    try {
-      await onSave(round.slot, nextGroups, times)
-    } finally {
-      setSaving(false)
+  function addPlayerToGroup(groupIndex, groupId) {
+    const selectedPlayer =
+      addChoices[groupId] || availablePlayers[0]
+
+    if (!selectedPlayer) {
+      window.alert('Det finns inga lediga spelare att lägga till.')
+      return
     }
+
+    setGroups(current =>
+      current.map((group, gi) =>
+        gi === groupIndex
+          ? {
+              ...group,
+              players: [...(group.players || []), selectedPlayer],
+            }
+          : group
+      )
+    )
+
+    setAddChoices(current => ({
+      ...current,
+      [groupId]: '',
+    }))
   }
 
   async function saveGroups() {
     setSaving(true)
 
+    const cleanedGroups = groups.map((group, index) => ({
+      ...group,
+      id: group.id ?? index + 1,
+      name: group.name?.trim() || `Boll ${index + 1}`,
+      players: (group.players || []).filter(Boolean),
+    }))
+
     try {
-      await onSave(round.slot, groups, times)
+      await onSave(round.slot, cleanedGroups, times)
+      window.alert('Bollarna är sparade.')
     } finally {
       setSaving(false)
     }
@@ -1565,6 +1601,8 @@ function AdminRoundGroups({ round, players, onSave }) {
                 <div
                   role="button"
                   tabIndex={0}
+                  title={`Ta bort ${player}`}
+                  aria-label={`Ta bort ${player}`}
                   onClick={() => {
                     if (!saving) {
                       removePlayerFromRound(groupIndex, playerIndex, player)
@@ -1577,15 +1615,17 @@ function AdminRoundGroups({ round, players, onSave }) {
                   }}
                   style={{
                     display: 'flex',
-                    width: '120px',
-                    minWidth: '120px',
-                    height: '44px',
+                    width: '42px',
+                    minWidth: '42px',
+                    height: '42px',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: '10px',
                     border: '2px solid #ff7b7b',
                     background: '#8b1e1e',
                     color: '#ffffff',
+                    fontSize: '24px',
+                    lineHeight: 1,
                     fontWeight: 900,
                     cursor: saving ? 'not-allowed' : 'pointer',
                     position: 'relative',
@@ -1593,7 +1633,7 @@ function AdminRoundGroups({ round, players, onSave }) {
                     flexShrink: 0,
                   }}
                 >
-                  TA BORT
+                  ×
                 </div>
               </div>
             ))}
@@ -1601,16 +1641,59 @@ function AdminRoundGroups({ round, players, onSave }) {
             {!group.players?.length && (
               <p className="hint">Inga spelare i denna boll.</p>
             )}
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr) auto',
+                gap: '10px',
+                marginTop: '12px',
+                alignItems: 'center',
+              }}
+            >
+              <select
+                value={addChoices[group.id] || ''}
+                onChange={event =>
+                  setAddChoices(current => ({
+                    ...current,
+                    [group.id]: event.target.value,
+                  }))
+                }
+                disabled={!availablePlayers.length || saving}
+                style={{ width: '100%', minWidth: 0 }}
+              >
+                <option value="">
+                  {availablePlayers.length
+                    ? 'Välj spelare att lägga till'
+                    : 'Inga lediga spelare'}
+                </option>
+                {availablePlayers.map(name => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={() => addPlayerToGroup(groupIndex, group.id)}
+                disabled={!availablePlayers.length || saving}
+                style={{ minHeight: '42px', whiteSpace: 'nowrap' }}
+              >
+                + Lägg till
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
-      <button onClick={saveGroups} disabled={saving}>
+      <button type="button" onClick={saveGroups} disabled={saving}>
         {saving ? 'Sparar…' : 'Spara bollar'}
       </button>
     </details>
   )
 }
+
 function Chat({players, identity}) {
   const [messages, setMessages] = useState([])
   const [name, setName] = useState(identity?.marker || players[0] || '')
