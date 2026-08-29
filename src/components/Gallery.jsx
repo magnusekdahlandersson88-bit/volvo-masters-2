@@ -23,20 +23,36 @@ export default function Gallery({ gallery = {}, onUpload }) {
           <span>Bilder och videos från Volvo Masters</span>
         </div>
 
-        <label className="uploadButton">
-          📷 Lägg till bild/video
-          <input
-            type="file"
-            accept="image/*,video/*"
-            capture="environment"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onUpload(file);
-              e.target.value = "";
-            }}
-          />
-        </label>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+  <label className="uploadButton">
+    📷 Ta foto
+    <input
+      type="file"
+      accept="image/*"
+      capture="environment"
+      hidden
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) onUpload(file);
+        e.target.value = "";
+      }}
+    />
+  </label>
+
+  <label className="uploadButton">
+    🖼️ Välj bild/video
+    <input
+      type="file"
+      accept="image/*,video/*"
+      hidden
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) onUpload(file);
+        e.target.value = "";
+      }}
+    />
+  </label>
+</div>
       </div>
 
       {items.length === 0 ? (

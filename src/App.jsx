@@ -194,29 +194,43 @@ function useTournamentData() {
     await setDoc(doc(db, 'tournament', 'data'), patch, { merge:true })
   }
   async function uploadMedia(file) {
-  if (!file) return;
+  if (!file) return
 
-  const id = `${Date.now()}-${file.name}`;
-  const fileRef = ref(storage, `gallery/${id}`);
+  try {
+    const id = `${Date.now()}-${file.name || 'photo.jpg'}`
+    const fileRef = ref(storage, `gallery/${id}`)
 
-  await uploadBytes(fileRef, file);
-  const url = await getDownloadURL(fileRef);
+    console.log('Laddar upp:', file.name, file.type, file.size)
 
-  const item = {
-    id,
-    url,
-    type: file.type,
-    name: file.name,
-    createdAt: Date.now(),
-  };
+    await uploadBytes(fileRef, file)
+    const url = await getDownloadURL(fileRef)
 
-  const currentGallery = Array.isArray(state.gallery)
-  ? state.gallery
-  : Object.values(state.gallery || {});
+    const item = {
+      id,
+      url,
+      type: file.type || 'image/jpeg',
+      name: file.name || 'Volvo Masters',
+      createdAt: Date.now(),
+    }
 
-await save({
-  gallery: [...currentGallery, item],
-});
+    const currentGallery = Array.isArray(state.gallery)
+      ? state.gallery
+      : Object.values(state.gallery || {}).flatMap(value =>
+          Array.isArray(value) ? value : [value]
+        )
+
+    await save({
+      gallery: [...currentGallery, item],
+    })
+
+    console.log('Uppladdning klar:', url)
+  } catch (error) {
+    console.error('Galleriuppladdning misslyckades:', error)
+
+    alert(
+      `Kunde inte ladda upp bilden.\n\n${error?.message || 'Okänt fel'}`
+    )
+  }
 }
   
 
