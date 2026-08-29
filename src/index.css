@@ -1323,3 +1323,430 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
   .nextTeeTimesList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   .nextTeeTime{justify-content:space-between;border-radius:12px}
 }
+/* =========================================================
+   VOLVO MASTERS – MOBILE OVERRIDE
+   Mobilanpassning + stabilare rendering
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  /* ---------- GRUND ---------- */
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  .shell,
+  .content,
+  main {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .content {
+    padding: 12px 12px 105px !important;
+    margin: 0 !important;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Förhindra att grid/flex-barn pressar sidan bredare */
+  .content > *,
+  .panel,
+  .heroCard,
+  .roundCard,
+  .playerCard,
+  .live-follow,
+  .livePage,
+  .leaderboardPro,
+  .chatPanel {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+
+  /* ---------- MINDRE GPU-TUNGT / MINDRE FLIMMER ---------- */
+
+  .panel,
+  .roundCard,
+  .playerCard,
+  .galleryCard,
+  .metric,
+  .bottomNav,
+  .brandTopbar {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .panel,
+  .roundCard,
+  .playerCard,
+  .galleryCard,
+  .metric {
+    box-shadow: 0 8px 24px rgba(0,0,0,.20);
+  }
+
+  button {
+    transition: none !important;
+  }
+
+
+  /* ---------- TOPP / LOGGA ---------- */
+
+  .brandTopbar {
+    padding: 14px 12px !important;
+  }
+
+  .brandIdentity {
+    justify-content: flex-start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .brandLogo {
+    width: 56px !important;
+    height: 56px !important;
+    flex: 0 0 56px;
+    object-fit: contain;
+  }
+
+  .brandText {
+    min-width: 0;
+  }
+
+  .brandText h1 {
+    font-size: clamp(25px, 8vw, 34px) !important;
+    line-height: 1;
+    white-space: normal;
+  }
+
+  .brandText small {
+    font-size: 9px !important;
+    letter-spacing: .11em;
+  }
+
+
+  /* ---------- RUBRIKER ---------- */
+
+  h1,
+  h2,
+  h3 {
+    overflow-wrap: anywhere;
+  }
+
+  .sectionHead h2,
+  .liveHero h2 {
+    font-size: clamp(30px, 10vw, 42px) !important;
+    line-height: 1;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: .12em !important;
+  }
+
+
+  /* ---------- HERO-KORT ---------- */
+
+  .heroCard {
+    min-height: 280px !important;
+    padding: 22px !important;
+    border-radius: 24px !important;
+  }
+
+  .heroCard h2 {
+    font-size: clamp(36px, 12vw, 52px) !important;
+  }
+
+  .heroCard p {
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+
+  /* ---------- LIVE ---------- */
+
+  .live-follow,
+  .livePage {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px 0 !important;
+    margin-top: 18px !important;
+  }
+
+  .liveHero {
+    margin-bottom: 18px;
+  }
+
+  .liveCards,
+  .ball-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100%;
+    gap: 12px !important;
+  }
+
+  .liveCard,
+  .ball-card {
+    width: 100%;
+    min-width: 0;
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .ball-top {
+    font-size: 17px;
+    gap: 10px;
+  }
+
+  .playerRow {
+    gap: 12px;
+  }
+
+  .playerName {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .playerScore {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+
+  /* ---------- LEADERBOARD ---------- */
+
+  .leaderboardPro {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px 0 !important;
+    overflow: hidden;
+  }
+
+  .podiumStage {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100%;
+  }
+
+  .podiumBlock,
+  .podiumBlock.place1 {
+    width: 100%;
+    min-height: auto !important;
+    padding: 18px !important;
+  }
+
+  .leaderRow {
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .leaderRow > div {
+    min-width: 0;
+  }
+
+  .leaderRow strong {
+    font-size: 20px;
+  }
+
+
+  /* ---------- RONDER ---------- */
+
+  .roundCards,
+  .cards {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .roundImageWrap {
+    height: 190px !important;
+  }
+
+  .roundCardBody {
+    padding: 16px !important;
+  }
+
+  .roundQuickStats {
+    grid-template-columns: 1fr !important;
+  }
+
+
+  /* ---------- SCORE ---------- */
+
+  .ballScorePage,
+  .ballScoreLayout,
+  .scoreLayout,
+  .scoreGrid {
+    grid-template-columns: 1fr !important;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ballSetup {
+    position: static !important;
+  }
+
+  .holeCommander {
+    min-height: auto !important;
+  }
+
+  .holeNumber {
+    font-size: clamp(68px, 25vw, 110px) !important;
+  }
+
+  .scorePlayerRow {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+
+  .scoreStepper {
+    grid-template-columns: 52px minmax(0,1fr) 52px;
+    width: 100%;
+  }
+
+  .scoreStepper button {
+    height: 52px;
+    touch-action: manipulation;
+  }
+
+  .scoreStepper input {
+    min-width: 0;
+  }
+
+  .holeNav,
+  .holeStepper {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .miniHoles {
+    grid-template-columns: repeat(6, minmax(0,1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .miniHoles button {
+    min-width: 0;
+    padding: 10px 2px;
+  }
+
+
+  /* ---------- CHAT ---------- */
+
+  .chatPanel {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .messages {
+    min-height: 0 !important;
+  }
+
+  .composer textarea {
+    min-height: 110px;
+  }
+
+
+  /* ---------- GALLERI ---------- */
+
+  .galleryPage {
+    width: 100%;
+    padding: 8px 0 !important;
+  }
+
+  .galleryGrid {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .galleryItem img,
+  .galleryItem video {
+    height: 150px !important;
+  }
+
+
+  /* ---------- BOTTOM NAV ---------- */
+
+  .bottomNav {
+    display: block !important;
+    position: fixed !important;
+
+    left: 8px !important;
+    right: 8px !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+
+    width: auto !important;
+    max-width: calc(100vw - 16px) !important;
+
+    padding: 6px !important;
+    border-radius: 22px !important;
+
+    background: rgba(3, 13, 8, .97) !important;
+
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    scrollbar-width: none;
+    z-index: 9999 !important;
+  }
+
+  .bottomNav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bottomNav .nav {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    gap: 3px !important;
+  }
+
+  .bottomNav .nav button {
+    flex: 1 0 52px !important;
+    min-width: 52px !important;
+    width: auto !important;
+    height: 54px !important;
+
+    padding: 6px !important;
+    justify-content: center !important;
+
+    touch-action: manipulation;
+  }
+
+  .bottomNav .nav button span {
+    font-size: 20px;
+  }
+
+
+  /* ---------- TOUCH ---------- */
+
+  button,
+  select,
+  input,
+  textarea {
+    touch-action: manipulation;
+  }
+
+}
