@@ -1806,10 +1806,36 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
   .uploadButton {
     transition: none !important;
   }
-}/* TEMP TEST – hitta orsaken till mobilflimmer */
+}/* =========================================================
+   MOBILE SHADOW OPTIMIZATION
+   Minskar flimmer på Android utan att platta ut hela designen
+   ========================================================= */
+
 @media (max-width: 700px) {
-  * {
+
+  /* Stora ytor – skuggor kostar mycket under scroll */
+  .panel,
+  .roundCard,
+  .galleryItem,
+  .leaderRow,
+  .leaderRow.enhanced,
+  .liveCard,
+  .ballCard {
     box-shadow: none !important;
+  }
+
+  /* Behåll lite djup på knappar och mindre element */
+  button,
+  .uploadButton {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16) !important;
+  }
+
+  /* Undvik textskuggor under mobilscroll */
+  h1,
+  h2,
+  h3,
+  strong,
+  .rank {
     text-shadow: none !important;
   }
 }
