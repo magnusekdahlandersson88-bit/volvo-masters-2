@@ -2363,7 +2363,9 @@ function AdminPlayerRow({
       await onUploadPhoto(file)
     } catch (error) {
       console.error(error)
-      alert('Bilden kunde inte laddas upp. Försök igen.')
+      alert(
+  `Bilden kunde inte laddas upp.\n\n${error?.message || 'Okänt fel'}`
+)
     } finally {
       setUploading(false)
       event.target.value = ''
