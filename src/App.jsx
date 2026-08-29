@@ -418,6 +418,22 @@ function App() {
     }
   }
   const [selectedRound, setSelectedRound] = useState(1)
+  const liveRound =
+  [...data.rounds]
+    .reverse()
+    .find(r =>
+      data.players.some(p =>
+        playerRoundResult(
+          p,
+          r,
+          data.courses,
+          data.scores,
+          data.playerHcp
+        ).played > 0
+      )
+    ) ||
+  data.rounds.find(r => r.slot === Number(selectedRound)) ||
+  data.rounds[0]
   
   const board = useMemo(() => leaderboard(data.players, data.rounds, data.courses, data.scores, data.playerHcp), [data.players, data.rounds, data.courses, data.scores, data.playerHcp])
   const nextRound = data.rounds.find(r => !data.players.some(p => playerRoundResult(p, r, data.courses, data.scores, data.playerHcp).played > 0)) || data.rounds[0]
@@ -623,7 +639,7 @@ function App() {
     courses={data.courses}
     scores={data.scores}
     players={data.players}
-    activeRound={data.rounds.find(r => r.slot === Number(selectedRound))}
+    activeRound={liveRound}
   />
 )}
       {view === 'players' && <Players players={data.players} board={board} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} playerPhotos={data.playerPhotos} updateHcp={updateHcp} admin={admin} />}
