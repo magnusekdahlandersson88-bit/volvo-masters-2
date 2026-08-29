@@ -438,7 +438,7 @@ function App() {
     await data.save({ playerHcp: { ...data.playerHcp, [player]: value } })
   }
 
-  async function updateHole(player, roundSlot, holeIndex, value) {
+  async function updateHole(player, roundSlot, holeIndex, value, sendNotification = false) {
     const scores = clone(data.scores)
     scores[player] ||= {}
     scores[player][roundSlot] ||= { hcp:'', holeScores:Array(18).fill('') }
@@ -449,9 +449,10 @@ function App() {
 
     scores[player][roundSlot].holeScores[holeIndex] = value
     await data.save({ scores })
+    if (!sendNotification) return
 
     const strokes = Number(value)
-    if (!strokes || String(previousValue) === String(value)) return
+    if (!strokes) return
 
     const round = data.rounds.find(item => item.slot === Number(roundSlot))
     const course = courseFor(data.courses, round)
@@ -512,10 +513,10 @@ function App() {
     try {
       // Deterministic ID prevents duplicate push notifications if the same
       // score is saved repeatedly from one or several devices.
-      await addDoc(collection(db, 'notifications'), {
-        ...eventData,
-        eventKey: eventId,
-      })
+      await setDoc(doc(db, 'notifications', eventId), {
+  ...eventData,
+  eventKey: eventId,
+})
 
       // Keep a deterministic live event document for the in-app feed.
       await setDoc(doc(db, 'liveEvents', eventId), eventData)
@@ -1672,46 +1673,50 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
   }, [identity.groupId, groups, updateIdentity])
 
   function setScore(player, value) {
-    if (!canEditGroup) return
-    updateHole(player, round.slot, activeHole, value)
-  }
+  if (!canEditGroup) return
+  updateHole(player, round.slot, activeHole, value, false)
+}
 
-  function addStroke(player, delta) {
-  const current = scores?.[player]?.[round.slot]?.holeScores?.[activeHole] || ''
+function addStroke(player, delta) {
+  const current =
+    scores?.[player]?.[round.slot]?.holeScores?.[activeHole] || ''
+
   const base = current === '' ? hole.par : Number(current)
   const next = Math.max(1, base + delta)
 
   setScore(player, String(next))
-
-  setTimeout(() => {
-    const updatedScores = {
-      ...scores,
-      [player]: {
-        ...scores?.[player],
-        [round.slot]: {
-          ...scores?.[player]?.[round.slot],
-          holeScores: {
-            ...scores?.[player]?.[round.slot]?.holeScores,
-            [activeHole]: String(next)
-          }
-        }
-      }
-    }
-
-    const allDone = groupPlayers.every(p => {
-      const v =
-        p === player
-          ? String(next)
-          : updatedScores?.[p]?.[round.slot]?.holeScores?.[activeHole]
-
-      return v !== undefined && v !== ''
-    })
-
-    if (allDone && activeHole < 17) {
-      setActiveHole(activeHole + 1)
-    }
-  }, 150)
 }
+async function confirmHoleBeforeLeaving(targetHole) {
+  if (targetHole === activeHole) return
+
+  const allDone = groupPlayers.every(player => {
+    const value =
+      scores?.[player]?.[round.slot]?.holeScores?.[activeHole]
+
+    return value !== undefined && value !== ''
+  })
+
+  if (!allDone) {
+    setActiveHole(targetHole)
+    return
+  }
+
+  for (const player of groupPlayers) {
+    const value =
+      scores?.[player]?.[round.slot]?.holeScores?.[activeHole]
+
+    await updateHole(
+      player,
+      round.slot,
+      activeHole,
+      value,
+      true
+    )
+  }
+
+  setActiveHole(targetHole)
+}
+ 
 
   const groupTotals = groupPlayers.map(player => playerRoundResult(player, round, courses, scores, playerHcp))
   const completed = groupTotals.reduce((sum, r) => sum + r.played, 0)
@@ -1747,13 +1752,13 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
       <div className="holeTopline"><span>Hål {activeHole + 1} av 18</span><b>Par {hole.par} · SI {hole.si}</b></div>
       <div className="holeNumber">{activeHole + 1}</div>
       <div className="holeNav">
-  <button onClick={() => setActiveHole(Math.max(0, activeHole - 1))}>
-    ← Föregående
-  </button>
+  <button onClick={() => confirmHoleBeforeLeaving(Math.max(0, activeHole - 1))}>
+  ← Föregående
+</button>
 
-  <button onClick={() => setActiveHole(Math.min(17, activeHole + 1))}>
-    Nästa →
-  </button>
+<button onClick={() => confirmHoleBeforeLeaving(Math.min(17, activeHole + 1))}>
+  Nästa →
+</button>
 </div>
       <div className="groupScoreRows">
         {groupPlayers.map(player => {
@@ -1772,12 +1777,20 @@ function BallScorecard({admin, identity, updateIdentity, players, rounds, course
         })}
       </div>
       <div className="holeStepper">
-        <button className="ghost" onClick={() => setActiveHole(h => Math.max(0, h - 1))}>← Föregående</button>
-        <button onClick={() => setActiveHole(h => Math.min(17, h + 1))}>Nästa →</button>
+        <button
+  className="ghost"
+  onClick={() => confirmHoleBeforeLeaving(Math.max(0, activeHole - 1))}
+>
+  ← Föregående
+</button>
+
+<button onClick={() => confirmHoleBeforeLeaving(Math.min(17, activeHole + 1))}>
+  Nästa →
+</button>
       </div>
       <div className="miniHoles">{holes.map((h,i) => {
         const done = groupPlayers.every(p => scores?.[p]?.[round.slot]?.holeScores?.[i])
-        return <button key={i} className={i === activeHole ? 'active' : done ? 'done' : ''} onClick={() => setActiveHole(i)}>{i+1}</button>
+        return <button key={i} className={i === activeHole ? 'active' : done ? 'done' : ''} onClick={() => confirmHoleBeforeLeaving(i)}>{i+1}</button>
       })}</div>
     </div>
 
