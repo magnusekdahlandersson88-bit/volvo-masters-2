@@ -623,6 +623,7 @@ function App() {
     courses={data.courses}
     scores={data.scores}
     players={data.players}
+    activeRound={data.rounds.find(r => r.slot === Number(selectedRound))}
   />
 )}
       {view === 'players' && <Players players={data.players} board={board} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} playerPhotos={data.playerPhotos} updateHcp={updateHcp} admin={admin} />}
