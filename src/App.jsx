@@ -61,10 +61,12 @@ async function registerPushToken(playerName = '') {
     token,
     deviceId: getDeviceId(),
     playerName: playerName || '',
+    ownerName: playerName || '',
     updatedAt: Date.now(),
     createdAt: Date.now(),
     userAgent: navigator.userAgent,
     enabled: true,
+    active: true,
   }, { merge:true })
 
   return { enabled:true, token }
@@ -441,8 +443,86 @@ function App() {
     scores[player] ||= {}
     scores[player][roundSlot] ||= { hcp:'', holeScores:Array(18).fill('') }
     scores[player][roundSlot].holeScores ||= Array(18).fill('')
+
+    const previousValue =
+      scores[player][roundSlot].holeScores[holeIndex] ?? ''
+
     scores[player][roundSlot].holeScores[holeIndex] = value
     await data.save({ scores })
+
+    const strokes = Number(value)
+    if (!strokes || String(previousValue) === String(value)) return
+
+    const round = data.rounds.find(item => item.slot === Number(roundSlot))
+    const course = courseFor(data.courses, round)
+    const holes =
+      course?.holes?.length === 18 ? course.holes : makeHoles()
+    const hole = holes[holeIndex] || { par: 4 }
+    const diff = strokes - Number(hole.par || 4)
+
+    let event = null
+
+    if (strokes === 1) {
+      event = {
+        type: 'hole-in-one',
+        icon: '🎯',
+        title: '🎯 HOLE-IN-ONE!',
+        body: `${player} gjorde hole-in-one på hål ${holeIndex + 1}!`,
+      }
+    } else if (diff <= -2) {
+      event = {
+        type: 'eagle',
+        icon: '🦅',
+        title: '🦅 Eagle!',
+        body: `${player} gjorde eagle på hål ${holeIndex + 1}.`,
+      }
+    } else if (diff === -1) {
+      event = {
+        type: 'birdie',
+        icon: '🐦',
+        title: '🐦 Birdie!',
+        body: `${player} gjorde birdie på hål ${holeIndex + 1}.`,
+      }
+    }
+
+    if (!event) return
+
+    const safePlayer = player
+      .toLowerCase()
+      .replace(/[^a-z0-9åäö]+/gi, '-')
+      .replace(/^-+|-+$/g, '')
+
+    const eventId =
+      `r${roundSlot}-${safePlayer}-h${holeIndex + 1}-${event.type}`
+
+    const eventData = {
+      ...event,
+      player,
+      roundSlot: Number(roundSlot),
+      hole: holeIndex + 1,
+      strokes,
+      par: Number(hole.par || 4),
+      course: course?.name || '',
+      createdAt: Date.now(),
+      url: '/?view=live',
+      view: 'live',
+      tag: `volvo-masters-${event.type}`,
+    }
+
+    try {
+      // Deterministic ID prevents duplicate push notifications if the same
+      // score is saved repeatedly from one or several devices.
+      await addDoc(collection(db, 'notifications'), {
+        ...eventData,
+        eventKey: eventId,
+      })
+
+      // Keep a deterministic live event document for the in-app feed.
+      await setDoc(doc(db, 'liveEvents', eventId), eventData)
+    } catch (error) {
+      // Score saving must never fail just because a notification failed.
+      console.error('Kunde inte skapa livehändelse', error)
+    }
   }
 
   async function updateRoundGroups(roundSlot, groups, teeTimes = {}) {
@@ -2046,7 +2126,14 @@ function HeroImageAdmin({ heroImages = {}, onUpload, onRemove }) {
     const file = event.target.files?.[0]
     if (!file) return
 
+    if (!file.type?.startsWith('image/')) {
+      alert('Välj en bildfil.')
+      event.target.value = ''
+      return
+    }
+
     setUploading(viewId)
+
     try {
       await onUpload(viewId, file)
       alert('Hero-bilden är uppdaterad.')
@@ -2064,7 +2151,7 @@ function HeroImageAdmin({ heroImages = {}, onUpload, onRemove }) {
       <div className="adminSectionHead">
         <div>
           <h3>Hero-bilder</h3>
-          <p>Byt sidornas stora bakgrundsbilder direkt från telefonen.</p>
+          <p>Välj en befintlig bild eller ta ett nytt foto direkt med telefonen.</p>
         </div>
       </div>
 
@@ -2130,10 +2217,45 @@ function HeroImageAdmin({ heroImages = {}, onUpload, onRemove }) {
                     overflow: 'hidden',
                   }}
                 >
-                  {isUploading ? 'Laddar upp…' : '📷 Byt hero-bild'}
+                  {isUploading ? 'Laddar upp…' : '🖼️ Välj från galleri'}
                   <input
                     type="file"
                     accept="image/*"
+                    onChange={event => handleUpload(viewId, event)}
+                    disabled={isUploading}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: isUploading ? 'wait' : 'pointer',
+                    }}
+                  />
+                </label>
+
+                <label
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    width: '100%',
+                    minHeight: '48px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.07)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    color: '#fff',
+                    fontWeight: 900,
+                    cursor: isUploading ? 'wait' : 'pointer',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {isUploading ? 'Laddar upp…' : '📷 Ta foto'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
                     onChange={event => handleUpload(viewId, event)}
                     disabled={isUploading}
                     style={{
