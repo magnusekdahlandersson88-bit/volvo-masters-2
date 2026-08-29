@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Gallery({ gallery = {}, onUpload }) {
+export default function Gallery({ gallery = {}, onUpload, admin, onDelete }) {
   const [selected, setSelected] = useState(null);
   const items = Object.values(gallery || {})
   .flatMap(item => {
@@ -89,6 +89,23 @@ export default function Gallery({ gallery = {}, onUpload }) {
             ) : (
               <img src={selected.url} alt={selected.name || "Galleri"} />
             )}
+            {admin && (
+  <button
+    type="button"
+    onClick={async () => {
+      const confirmed = window.confirm(
+        'Vill du verkligen ta bort den här bilden?'
+      )
+
+      if (!confirmed) return
+
+      await onDelete(selected)
+      setSelected(null)
+    }}
+  >
+    🗑 Ta bort
+  </button>
+)}
           </div>
         </div>
       )}
