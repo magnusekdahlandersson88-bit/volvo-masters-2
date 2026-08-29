@@ -1148,7 +1148,7 @@ function Leaderboard({ board, playerPhotos = {} }) {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 textAlign: 'center',
-                transform: isWinner ? 'translateY(-12px)' : 'none',
+                transform: 'none',
               }}
             >
               <div
