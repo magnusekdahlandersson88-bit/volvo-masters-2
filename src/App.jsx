@@ -865,7 +865,10 @@ function ViewHero({
   const content = heroContent[view]
   if (!content) return null
 
-  const heroImage = heroImages[view] || content.image
+  const heroImage =
+  view === 'live'
+    ? content.image
+    : heroImages[view] || content.image
 
   return (
     <section
