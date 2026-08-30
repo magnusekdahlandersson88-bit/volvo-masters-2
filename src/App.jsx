@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { initializeApp } from 'firebase/app'
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject
-} from 'firebase/storage'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc ,query,
 orderBy,} from "firebase/firestore";
 import './index.css'
@@ -234,35 +229,6 @@ function useTournamentData() {
 
     alert(
       `Kunde inte ladda upp bilden.\n\n${error?.message || 'Okänt fel'}`
-    )
-  }
-}
-async function deleteGalleryItem(item) {
-  if (!item?.id) return
-
-  try {
-    const fileRef = ref(storage, `gallery/${item.id}`)
-
-    await deleteObject(fileRef)
-
-    const currentGallery = Array.isArray(state.gallery)
-      ? state.gallery
-      : Object.values(state.gallery || {}).flatMap(value =>
-          Array.isArray(value) ? value : [value]
-        )
-
-    const nextGallery = currentGallery.filter(
-      galleryItem => galleryItem?.id !== item.id
-    )
-
-    await save({
-      gallery: nextGallery,
-    })
-  } catch (error) {
-    console.error('Kunde inte ta bort galleriobjekt:', error)
-
-    alert(
-      `Kunde inte ta bort bilden.\n\n${error?.message || 'Okänt fel'}`
     )
   }
 }
@@ -695,11 +661,9 @@ function App() {
       {view === 'chat' && <Chat players={data.players} identity={identity} />}
       {view === "gallery" && (
   <Gallery
-  gallery={data.gallery}
-  onUpload={uploadMedia}
-  admin={admin}
-  onDelete={deleteGalleryItem}
-/>
+    gallery={data.gallery}
+    onUpload={uploadMedia}
+  />
 )}
       {view === 'admin' && admin && (
         <AdminPanel
