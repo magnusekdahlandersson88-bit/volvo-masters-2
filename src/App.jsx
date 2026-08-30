@@ -1015,22 +1015,29 @@ function Home({board, nextRound, nextCourse, setView, rounds, setSelectedRound, 
   setSelectedRound(nextRound.slot)
   setView('score')
 }
+const courseImageKey = nextCourse.name
+  .toLowerCase()
+  .replace(" golfklubb", "")
+  .replace(" golf club", "")
+  .replace(" gk", "")
+  .replaceAll("ä", "a")
+  .replaceAll("ö", "o")
+  .replaceAll("å", "a")
+  .trim()
+
+const heroImage =
+  heroImages.home ||
+  COURSE_IMAGES[courseImageKey]
  return (
   <section className="homeGrid">
     <div
+    
       className="heroCard"
       style={{
         backgroundImage: `linear-gradient(
           rgba(3, 19, 12, 0.35),
           rgba(3, 19, 12, 0.82)
-        ), url(${heroImages.home || COURSE_IMAGES[
-  nextCourse.name
-    .toLowerCase()
-    .replace(" gk", "")
-    .replace("ä", "a")
-    .replace("ö", "o")
-    .replace("å", "a")
-]})`
+        ), url(${heroImage})`
       }}
     >
       <small>Nästa deltävling</small>
