@@ -788,7 +788,7 @@ function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin
         ? `${leader.player} leder på ${leader.total} poäng`
         : 'Säsongens ranking och toppresultat',
       badge: '🏆 Bästa 4 räknas',
-      image: '/courses/skovde.jpg',
+      image: getCourseImage(course),
     },
     rounds: {
       eyebrow: 'Tävlingskalender',
