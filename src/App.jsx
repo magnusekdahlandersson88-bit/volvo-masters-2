@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { initializeApp } from 'firebase/app'
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'firebase/storage'
 import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc ,query,
 orderBy,} from "firebase/firestore";
 import './index.css'
@@ -232,7 +238,38 @@ function useTournamentData() {
     )
   }
 }
-  
+   async function deleteGalleryItem(item) {
+  if (!item?.id) return
+
+  try {
+    const fileRef = ref(storage, `gallery/${item.id}`)
+
+    await deleteObject(fileRef)
+
+    const currentGallery = Array.isArray(state.gallery)
+      ? state.gallery
+      : Object.values(state.gallery || {}).flatMap(value =>
+          Array.isArray(value) ? value : [value]
+        )
+
+    const nextGallery = currentGallery.filter(
+      galleryItem => galleryItem?.id !== item.id
+    )
+
+    await save({
+      gallery: nextGallery,
+    })
+  } catch (error) {
+    console.error('Kunde inte ta bort galleriobjekt:', error)
+
+    alert(
+      `Kunde inte ta bort bilden.\n\n${error?.message || 'Okänt fel'}`
+    )
+  }
+} 
+
+
+
 
 
 
@@ -285,7 +322,14 @@ function useTournamentData() {
     return url
   }
 
-  return { ...state, save, uploadMedia, uploadPlayerPhoto, uploadHeroImage }
+  return {
+  ...state,
+  save,
+  uploadMedia,
+  deleteGalleryItem,
+  uploadPlayerPhoto,
+  uploadHeroImage
+}
 }
 
 function courseFor(courses, round) {
@@ -661,9 +705,11 @@ function App() {
       {view === 'chat' && <Chat players={data.players} identity={identity} />}
       {view === "gallery" && (
   <Gallery
-    gallery={data.gallery}
-    onUpload={uploadMedia}
-  />
+  gallery={data.gallery}
+  onUpload={uploadMedia}
+  admin={admin}
+  onDelete={data.deleteGalleryItem}
+/>
 )}
       {view === 'admin' && admin && (
         <AdminPanel
