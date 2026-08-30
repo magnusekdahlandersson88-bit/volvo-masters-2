@@ -633,39 +633,10 @@ function App() {
         </button>
       )}
       <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
-      <div
-  style={{
-    margin: "0 0 16px",
-    padding: "14px 16px",
-    borderRadius: "14px",
-    background: notificationsEnabled
-      ? "rgba(34, 197, 94, 0.14)"
-      : "rgba(245, 158, 11, 0.14)",
-    border: notificationsEnabled
-      ? "1px solid rgba(34, 197, 94, 0.45)"
-      : "1px solid rgba(245, 158, 11, 0.45)",
-  }}
->
-  <strong>
-    {notificationsEnabled
-      ? "🟢 Notiser aktiverade"
-      : "🔔 Aktivera notiser"}
-  </strong>
+      
+    
 
-  <div style={{ marginTop: "5px", opacity: 0.85 }}>
-    {notificationStatus}
-  </div>
-
-  {!notificationsEnabled && (
-    <button
-      type="button"
-      onClick={enableNotificationsForCurrentDevice}
-      style={{ marginTop: "10px" }}
-    >
-      Aktivera / försök igen
-    </button>
-  )}
-</div>
+ 
       {view !== 'home' && (
         <ViewHero
           view={view}
@@ -1880,7 +1851,21 @@ async function confirmHoleBeforeLeaving(targetHole) {
 
     <div className="panel wideScore groupOverview">
       <div className="sectionHead"><h2>Bollöversikt</h2><span>Live stableford</span></div>
-      <div className="groupResults">{groupTotals.map(r => <div className="groupResult" key={r.player}><b>{r.player}</b><span>{r.played}/18 hål</span><strong>{r.points}p</strong><small>{r.strokes || '—'} slag</small></div>)}</div>
+      <div className="groupResults compactGroupResults">
+  {groupTotals.map(r => (
+    <div className="groupResult compactGroupResult" key={r.player}>
+      <div className="groupResultMain">
+        <b>{r.player}</b>
+        <span>{r.played}/18 hål</span>
+      </div>
+
+      <div className="groupResultScore">
+        <strong>{r.points}p</strong>
+        <small>{r.strokes || '—'} slag</small>
+      </div>
+    </div>
+  ))}
+</div>
     </div>
 
 

@@ -1838,4 +1838,50 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
   .rank {
     text-shadow: none !important;
   }
+}@media (max-width: 700px) {
+  .compactGroupResults {
+    display: grid;
+    gap: 8px;
+  }
+
+  .compactGroupResult {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px !important;
+    min-height: 0 !important;
+  }
+
+  .groupResultMain,
+  .groupResultScore {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .groupResultMain {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .groupResultMain b {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .groupResultMain span,
+  .groupResultScore small {
+    opacity: 0.75;
+    font-size: 0.9rem;
+  }
+
+  .groupResultScore {
+    flex-shrink: 0;
+  }
+
+  .groupResultScore strong {
+    font-size: 1.25rem;
+  }
 }
