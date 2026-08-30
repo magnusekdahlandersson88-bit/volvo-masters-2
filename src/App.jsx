@@ -637,18 +637,17 @@ function App() {
     
 
  
-      {view !== 'home' && (
-        <ViewHero
-          view={view}
-          rounds={data.rounds}
-          courses={data.courses}
-          selectedRound={selectedRound}
-          identity={identity}
-          board={board}
-          admin={admin}
-          heroImages={data.heroImages}
-        />
-      )}
+      <ViewHero
+  view={view}
+  rounds={data.rounds}
+  courses={data.courses}
+  selectedRound={selectedRound}
+  liveRound={liveRound}
+  identity={identity}
+  board={board}
+  admin={admin}
+  heroImages={data.heroImages}
+/>
 
       {view === 'home' && <Home
   board={board}
@@ -772,12 +771,23 @@ function Topbar({ loading, admin, identity, clearIdentity }) {
   
 
 
-function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin, heroImages = {} }) {
+function ViewHero({
+  view,
+  rounds,
+  courses,
+  selectedRound,
+  liveRound,
+  identity,
+  board,
+  admin,
+  heroImages = {}
+}) {
   const round =
     rounds.find(item => item.slot === Number(selectedRound)) ||
     rounds[0]
 
   const course = courseFor(courses, round)
+  const liveCourse = courseFor(courses, liveRound)
   const leader = board?.[0]
 
   const heroContent = {
@@ -788,7 +798,7 @@ function ViewHero({ view, rounds, courses, selectedRound, identity, board, admin
         ? `${leader.player} leder på ${leader.total} poäng`
         : 'Säsongens ranking och toppresultat',
       badge: '🏆 Bästa 4 räknas',
-      image: getCourseImage(course),
+      image: getCourseImage(liveCourse),
     },
     rounds: {
       eyebrow: 'Tävlingskalender',
