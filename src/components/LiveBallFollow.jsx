@@ -13,12 +13,16 @@ export default function LiveBallFollow({ rounds = [], courses = [], scores = {},
     const strokes = holes.reduce((sum, h) => h !== "" ? sum + Number(h) : sum, 0);
     return { played, strokes };
   }
-
+const isLive = groups.some(group =>
+  (group.players || []).some(player => playerProgress(player).played > 0)
+)
   return (
     <section className="live-follow livePage">
       <div className="section-head liveHero">
         <div>
-          <p className="eyebrow">🔴 LIVE FRÅN BANAN</p>
+          <p className="eyebrow">
+  {isLive ? '🟢 LIVE FRÅN BANAN' : '🔴 LIVE FRÅN BANAN'}
+</p>
           <h2>Följ andra bollar</h2>
           <span>{course?.name || "Aktuell rond"}</span>
         </div>

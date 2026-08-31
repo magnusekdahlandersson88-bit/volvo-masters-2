@@ -841,8 +841,8 @@ function ViewHero({
       eyebrow: 'Direkt från banan',
       title: 'Live',
       subtitle: 'Följ bollarna, hål för hål, medan tävlingen pågår',
-      badge: '🔴 LIVE',
-      image: '/courses/skovde.jpg',
+      badge: liveRound ? '🟢 LIVE' : '🔴 LIVE',
+      image: getCourseImage(liveCourse),
     },
     gallery: {
       eyebrow: 'Volvo Masters-minnen',
