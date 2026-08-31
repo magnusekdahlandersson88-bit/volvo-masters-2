@@ -14,7 +14,10 @@ export default function LiveBallFollow({ rounds = [], courses = [], scores = {},
     return { played, strokes };
   }
 const isLive = groups.some(group =>
-  (group.players || []).some(player => playerProgress(player).played > 0)
+  (group.players || []).some(player => {
+    const played = playerProgress(player).played
+    return played > 0 && played < 18
+  })
 )
 
   return (
