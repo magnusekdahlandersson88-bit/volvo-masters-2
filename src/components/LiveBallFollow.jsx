@@ -16,6 +16,7 @@ export default function LiveBallFollow({ rounds = [], courses = [], scores = {},
 const isLive = groups.some(group =>
   (group.players || []).some(player => playerProgress(player).played > 0)
 )
+
   return (
     <section className="live-follow livePage">
       <div className="section-head liveHero">
