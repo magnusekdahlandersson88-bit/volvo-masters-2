@@ -1038,6 +1038,7 @@ img {
 .groupEditorGrid { display: grid; gap: 12px; }
 .groupEditCard { border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; gap: 12px; background: rgba(255,255,255,.02); }
 .groupEditHead { display: grid; grid-template-columns: minmax(0,1fr) 130px auto; gap: 8px; }
+
 .groupEditHead input, .groupPlayerEditor select { width: 100%; }
 .groupPlayerEditors { display: grid; gap: 8px; }
 .groupPlayerEditor { display: grid; grid-template-columns: minmax(0,1fr) 42px; gap: 8px; }
@@ -1883,5 +1884,205 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
 
   .groupResultScore strong {
     font-size: 1.25rem;
+  }
+}
+/* Course emoji badges */
+.roundCourseTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.courseEmojiBadge {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 25px;
+  line-height: 1;
+
+  background: #062c1d;
+  border: 2px solid #d4af4c;
+  border-radius: 50%;
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+.roundCourseTitle > span:last-child {
+  min-width: 0;
+}
+/* ===== Ny mobilnavigation ===== */
+@media (max-width: 700px) {
+  .bottomNav {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    padding: 6px !important;
+
+    background: #07150f !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-radius: 20px !important;
+
+    overflow: hidden !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  .bottomNav .nav {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 3px !important;
+  }
+
+  .bottomNav .nav button {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 58px !important;
+    padding: 5px 2px !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+
+    border: 0 !important;
+    border-radius: 15px !important;
+    background: transparent !important;
+  }
+
+  .bottomNav .nav button span {
+    font-size: 21px !important;
+    line-height: 1 !important;
+  }
+
+  .bottomNav .nav button small {
+    display: block !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    color: rgba(255, 255, 255, 0.58) !important;
+  }
+
+  .bottomNav .nav button.active {
+    background: rgba(232, 189, 82, 0.13) !important;
+  }
+
+  .bottomNav .nav button.active span {
+    transform: translateY(-1px);
+  }
+
+  .bottomNav .nav button.active small {
+    color: #e8bd52 !important;
+  }
+}
+/* ===== Mobil meny-panel ===== */
+.mobileMenuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  padding: 14px;
+
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.mobileMenuPanel {
+  width: min(100%, 460px);
+
+  padding: 18px;
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+
+  background: #07150f;
+  border: 1px solid rgba(232, 189, 82, 0.28);
+  border-radius: 24px;
+
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.mobileMenuHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 14px;
+}
+
+.mobileMenuHead small {
+  display: block;
+  margin-bottom: 2px;
+
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mobileMenuHead h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.mobileMenuHead > button {
+  width: 42px;
+  height: 42px;
+
+  padding: 0;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  font-size: 18px;
+}
+
+.mobileMenuLinks {
+  display: grid;
+  gap: 8px;
+}
+
+.mobileMenuLinks > button {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  padding: 13px 14px;
+
+  text-align: left;
+
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.mobileMenuLinks > button span {
+  font-size: 22px;
+}
+
+.mobileMenuLinks > button b {
+  font-size: 15px;
+}
+
+.mobileMenuLinks > button i {
+  font-size: 25px;
+  font-style: normal;
+  color: #e8bd52;
+}
+
+@media (min-width: 701px) {
+  .mobileMenuOverlay {
+    display: none;
   }
 }

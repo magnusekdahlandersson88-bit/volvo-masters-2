@@ -426,6 +426,10 @@ function App() {
   )
   const [notificationStatus, setNotificationStatus] = useState('')
   const [foregroundNotice, setForegroundNotice] = useState(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  
+  
+
 
   useEffect(() => {
     const requestedView = new URLSearchParams(window.location.search).get('view')
@@ -633,11 +637,75 @@ function App() {
         </button>
       )}
       <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
-      
+     {menuOpen && (
+  <div
+    className="mobileMenuOverlay"
+    onClick={() => setMenuOpen(false)}
+  >
+    <div
+      className="mobileMenuPanel"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="mobileMenuHead">
+        <div>
+          <small>Volvo Masters</small>
+          <h2>Meny</h2>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setMenuOpen(false)}
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="mobileMenuLinks">
+        {[
+          ['rounds', '⛳', 'Rundor'],
+          ['players', '👥', 'Spelare'],
+          ['stats', '📊', 'Statistik'],
+          ['chat', '💬', 'Chat'],
+          ['gallery', '🖼️', 'Galleri'],
+        ].map(([id, icon, label]) => (
+          <button
+            type="button"
+            key={id}
+            onClick={() => {
+              setView(id)
+              setMenuOpen(false)
+            }}
+          >
+            <span>{icon}</span>
+            <b>{label}</b>
+            <i>›</i>
+          </button>
+        ))}
+
+        <button
+          type="button"
+          onClick={() => {
+            setMenuOpen(false)
+
+            if (admin) {
+              setView('admin')
+            } else {
+              login()
+            }
+          }}
+        >
+          <span>⚙️</span>
+          <b>Admin</b>
+          <i>›</i>
+        </button>
+      </div>
+    </div>
+  </div>
+)} 
     
 
  
-      <ViewHero
+<ViewHero
   view={view}
   rounds={data.rounds}
   courses={data.courses}
@@ -709,28 +777,51 @@ function App() {
     compact
     onAdmin={login}
     admin={admin}
+    onMenu={() => setMenuOpen(true)}
   />
 </footer>
   </div>
 }
 
-function Nav({ view, setView, compact=false, onAdmin, admin=false }) {
-  const allItems = [
-    ['home','⌂','Hem'], ['leaderboard','🏆','Leaderboard'], ['rounds','⛳','Rundor'], ['score','✍️','Score'],
-    ['players','👥','Spelare'], ['stats','📊','Statistik'], ['chat','💬','Chat'],['live', '📡', 'Live'], ['gallery','🖼️','Galleri'], ['admin', '⚙️', 'Admin']
-  ]
+function Nav({ view, setView, compact=false, onAdmin, onMenu, admin=false }) {
+  const allItems = compact
+  ? [
+      ['home', '⌂', 'Hem'],
+      ['live', '📡', 'Live'],
+      ['score', '✍️', 'Score'],
+      ['leaderboard', '🏆', 'Resultat'],
+      ['menu', '☰', 'Meny']
+    ]
+  : [
+      ['home', '⌂', 'Hem'],
+      ['leaderboard', '🏆', 'Leaderboard'],
+      ['rounds', '⛳', 'Rundor'],
+      ['score', '✍️', 'Score'],
+      ['players', '👥', 'Spelare'],
+      ['stats', '📊', 'Statistik'],
+      ['chat', '💬', 'Chat'],
+      ['live', '📡', 'Live'],
+      ['gallery', '🖼️', 'Galleri'],
+      ['admin', '⚙️', 'Admin']
+    ]
   
 
 
 const visibleItems = allItems
   return <nav className={compact ? 'nav compact' : 'nav'}>{visibleItems.map(([id, icon, label]) =>  <button key={id} className={view === id ? 'active' : ''} onClick={() => {
+  if (id === 'menu') {
+  if (onMenu) onMenu()
+  return
+}
+
   if (id === 'admin') {
     if (admin) setView('admin')
     else if (onAdmin) onAdmin()
   } else {
     setView(id)
   }
-}}><span>{icon}</span>{!compact && label}</button>)}</nav>
+}}><span>{icon}</span>
+<small>{label}</small></button>)}</nav>
 }
 
 function Topbar({ loading, admin, identity, clearIdentity }) {
@@ -1594,8 +1685,25 @@ function GroupEditor({ round, players, onSave }) {
   }
 
   function removeGroup(groupId) {
-    setGroups(current => current.filter(group => group.id !== groupId))
-  }
+  const group = groups.find(group => group.id === groupId)
+  if (!group) return
+
+  const confirmed = window.confirm(
+    `Vill du verkligen ta bort ${group.name || 'den här bollen'}?\n\nSpelarna raderas inte och kan läggas till i andra bollar.`
+  )
+
+  if (!confirmed) return
+
+  setGroups(current =>
+    current.filter(group => group.id !== groupId)
+  )
+
+  setTeeTimes(current => {
+    const next = { ...current }
+    delete next[groupId]
+    return next
+  })
+}
 
   async function save() {
     const cleaned = groups
@@ -1670,7 +1778,10 @@ function Rounds({ admin, players, rounds, courses, scores, playerHcp, setView, s
                 <div className="roundImageShade" />
                 <div className="roundImageTitle">
                   <small>Deltävling {round.slot}</small>
-                  <h3>{course?.emoji || '⛳'} {course?.name || 'Golfbana'}</h3>
+                  <h3 className="roundCourseTitle">
+  <span className="courseEmojiBadge">{course?.emoji || '⛳'}</span>
+  <span>{course?.name || 'Golfbana'}</span>
+</h3>
                 </div>
               </div>
 
@@ -2128,8 +2239,49 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
   }
 
   async function saveCourses() {
-    await flash('Banorna är sparade.', () => save({courses:courseDrafts}))
+  const skovdePar = [
+    4, 4, 5, 3, 4, 3, 5, 4, 4,
+    5, 3, 4, 5, 3, 4, 4, 3, 5
+  ]
+
+  const skovdeSi = [
+    9, 13, 3, 15, 1, 5, 11, 17, 7,
+    2, 8, 4, 16, 10, 18, 14, 6, 12
+  ]
+
+  const nextCourses = courseDrafts.map(course => {
+  const name = String(course.name || '').toLowerCase()
+
+  let emoji = course.emoji || '⛳'
+
+  if (name.includes('breviken')) emoji = '🌳'
+  if (name.includes('billingen')) emoji = '⛰️'
+  if (name.includes('knistad')) emoji = '🏡'
+  if (name.includes('skövde') || name.includes('skovde')) emoji = '🌿'
+  if (name.includes('mariestad')) emoji = '🌊'
+  if (name.includes('läckö') || name.includes('lacko')) emoji = '🏰'
+
+  if (name.includes('skövde') || name.includes('skovde')) {
+    return {
+      ...course,
+      emoji,
+      holes: skovdePar.map((par, index) => ({
+        par,
+        si: skovdeSi[index]
+      }))
+    }
   }
+
+  return {
+    ...course,
+    emoji
+  }
+})
+await flash(
+  'Banorna är sparade.',
+  () => save({ courses: nextCourses })
+)
+}
 
   const tabs = [['overview','Översikt'],['players','Spelare'],['rounds','Deltävlingar'],['groups','Bollar'],['courses','Banor'],['heroes','Hero-bilder'],['notifications','Notiser']]
   return <section className="adminPage">
@@ -2175,7 +2327,18 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
 
     {tab==='courses' && <div className="panel adminSection">
       <div className="adminSectionHead"><div><h3>Banor</h3><p>Uppdatera tee, slope, CR och par.</p></div><button onClick={saveCourses}>Spara banor</button></div>
-      <div className="adminCourseGrid">{courseDrafts.map(c => <div className="adminCourseCard" key={c.id}><h4>{c.name}</h4><label>Namn<input value={c.name} onChange={e=>updateCourse(c.id,{name:e.target.value})}/></label><div className="adminFieldGrid"><label>Tee<input value={c.tee||''} onChange={e=>updateCourse(c.id,{tee:e.target.value})}/></label><label>Par<input inputMode="numeric" value={c.par||''} onChange={e=>updateCourse(c.id,{par:Number(e.target.value)||''})}/></label><label>CR<input inputMode="decimal" value={c.cr||''} onChange={e=>updateCourse(c.id,{cr:Number(e.target.value)||''})}/></label><label>Slope<input inputMode="numeric" value={c.slope||''} onChange={e=>updateCourse(c.id,{slope:Number(e.target.value)||''})}/></label></div></div>)}</div>
+      <div className="adminCourseGrid">{courseDrafts.map(c => <div className="adminCourseCard" key={c.id}><h4>{c.name}</h4><label>Namn<input value={c.name} onChange={e=>updateCourse(c.id,{name:e.target.value})}/></label><div className="adminFieldGrid"><label>Tee<input value={c.tee||''} onChange={e=>updateCourse(c.id,{tee:e.target.value})}/></label><label>Par<input inputMode="numeric" value={c.par||''} onChange={e=>updateCourse(c.id,{par:Number(e.target.value)||''})}/></label><label>
+  CR
+  <input
+    inputMode="decimal"
+    value={c.cr ?? ''}
+    onChange={e =>
+      updateCourse(c.id, {
+        cr: e.target.value.replace(',', '.')
+      })
+    }
+  />
+</label><label>Slope<input inputMode="numeric" value={c.slope||''} onChange={e=>updateCourse(c.id,{slope:Number(e.target.value)||''})}/></label></div></div>)}</div>
     </div>}
 
     {tab==='heroes' && (
@@ -2644,7 +2807,53 @@ function AdminRoundGroups({ round, players, onSave }) {
       [groupId]: '',
     }))
   }
+  function addGroup() {
+  const nextId =
+    Math.max(0, ...groups.map(group => Number(group.id) || 0)) + 1
 
+  setGroups(current => [
+    ...current,
+    {
+      id: nextId,
+      name: `Boll ${nextId}`,
+      players: [],
+    },
+  ])
+}
+
+
+
+function removeGroup(groupIndex, groupId) {
+  const group = groups[groupIndex]
+  if (!group) return
+
+  if (groups.length === 1) {
+    window.alert('Det måste finnas minst en boll kvar.')
+    return
+  }
+
+  const confirmed = window.confirm(
+    `Vill du verkligen ta bort ${group.name || `Boll ${groupIndex + 1}`}?\n\nSpelarna raderas inte och kan läggas till i andra bollar.`
+  )
+
+  if (!confirmed) return
+
+  setGroups(current =>
+    current.filter((_, index) => index !== groupIndex)
+  )
+
+  setTimes(current => {
+    const next = { ...current }
+    delete next[groupId]
+    return next
+  })
+
+  setAddChoices(current => {
+    const next = { ...current }
+    delete next[groupId]
+    return next
+  })
+}
   async function saveGroups() {
     setSaving(true)
 
@@ -2699,6 +2908,20 @@ function AdminRoundGroups({ round, players, onSave }) {
                 }
               />
             </div>
+            <button
+  type="button"
+  onClick={() => removeGroup(groupIndex, group.id)}
+  disabled={groups.length === 1 || saving}
+  style={{
+    marginTop: '10px',
+    background: '#8b1e1e',
+    border: '2px solid #ff7b7b',
+    color: '#fff',
+    fontWeight: 800,
+  }}
+>
+  🗑 Ta bort boll
+</button>
 
             {(group.players || []).map((player, playerIndex) => (
               <div
@@ -2811,9 +3034,31 @@ function AdminRoundGroups({ round, players, onSave }) {
         ))}
       </div>
 
-      <button type="button" onClick={saveGroups} disabled={saving}>
-        {saving ? 'Sparar…' : 'Spara bollar'}
-      </button>
+      <div
+  style={{
+    display: 'flex',
+    gap: '10px',
+    marginTop: '14px',
+    flexWrap: 'wrap',
+  }}
+>
+  <button
+    type="button"
+    className="ghost"
+    onClick={addGroup}
+    disabled={saving}
+  >
+    + Ny boll
+  </button>
+
+  <button
+    type="button"
+    onClick={saveGroups}
+    disabled={saving}
+  >
+    {saving ? 'Sparar…' : 'Spara bollar'}
+  </button>
+</div>
     </details>
   )
 }
