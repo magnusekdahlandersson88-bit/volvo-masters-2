@@ -1999,8 +1999,10 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
 .mobileMenuPanel {
   width: min(100%, 460px);
 
-  padding: 18px;
-  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  padding: 14px;
+padding-bottom: calc(14px + env(safe-area-inset-bottom));
+max-height: calc(100vh - 110px);
+overflow-y: auto;
 
   background: #07150f;
   border: 1px solid rgba(232, 189, 82, 0.28);
@@ -2047,7 +2049,7 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
 
 .mobileMenuLinks {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .mobileMenuLinks > button {
@@ -2058,7 +2060,7 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
   align-items: center;
   gap: 10px;
 
-  padding: 13px 14px;
+  padding: 11px 14px;
 
   text-align: left;
 
