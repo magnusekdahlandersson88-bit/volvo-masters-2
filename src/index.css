@@ -2569,3 +2569,208 @@ overflow: hidden;
     line-height: 1.3 !important;
   }
 }
+/* ===== Premium Rundor ===== */
+@media (max-width: 700px) {
+  .roundsPage {
+    padding-bottom: 90px;
+  }
+
+  .roundCards {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .roundCard {
+    overflow: hidden !important;
+    border-radius: 24px !important;
+    border: 1px solid rgba(232, 189, 82, 0.16) !important;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(12, 48, 34, 0.96),
+        rgba(5, 24, 17, 0.98)
+      ) !important;
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.20) !important;
+  }
+
+  .roundImageWrap {
+    position: relative !important;
+    height: 185px !important;
+    overflow: hidden !important;
+  }
+
+  .roundImage {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  .roundImageShade {
+    position: absolute !important;
+    inset: 0 !important;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(3, 19, 12, 0.05) 0%,
+        rgba(3, 19, 12, 0.18) 38%,
+        rgba(3, 19, 12, 0.92) 100%
+      ) !important;
+  }
+
+  .roundImageTitle {
+    position: absolute !important;
+    left: 18px !important;
+    right: 18px !important;
+    bottom: 16px !important;
+    z-index: 2 !important;
+  }
+
+  .roundImageTitle > small {
+    display: inline-flex !important;
+    padding: 6px 10px !important;
+    margin-bottom: 8px !important;
+    border: 1px solid rgba(232, 189, 82, 0.28) !important;
+    border-radius: 999px !important;
+    background: rgba(3, 19, 12, 0.68) !important;
+    color: #e8bd52 !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    letter-spacing: .12em !important;
+    text-transform: uppercase !important;
+  }
+
+  .roundCourseTitle {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 0 !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+    letter-spacing: -.03em !important;
+  }
+
+  .roundImageTitle .courseEmojiBadge {
+    width: 38px !important;
+    height: 38px !important;
+    flex: 0 0 38px !important;
+    font-size: 21px !important;
+    background: rgba(3, 19, 12, 0.82) !important;
+  }
+
+  .roundCardBody {
+    padding: 16px !important;
+  }
+
+  .roundMeta {
+    margin: 0 0 12px !important;
+    color: rgba(255, 255, 255, 0.58) !important;
+    font-size: 13px !important;
+  }
+
+  .roundQuickStats {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .roundQuickStats span {
+    min-width: 0 !important;
+    padding: 10px 6px !important;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    border-radius: 12px !important;
+    background: rgba(0, 0, 0, 0.14) !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+  }
+
+  .roundQuickStats b {
+    display: block !important;
+    margin-bottom: 3px !important;
+    color: #fff !important;
+    font-size: 15px !important;
+  }
+
+  .roundCardActions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .roundCardActions button {
+    min-height: 46px !important;
+    padding: 10px !important;
+    border-radius: 14px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+  }
+
+  .roundCardActions button:first-child {
+    background: #e8bd52 !important;
+    border-color: #e8bd52 !important;
+    color: #07150f !important;
+  }
+
+  .roundCardActions .ghost {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #fff !important;
+  }
+
+  .roundResultsPanel {
+    margin-top: 14px !important;
+    padding-top: 14px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .roundResultsPanel h4 {
+    margin: 0 0 10px !important;
+    font-size: 16px !important;
+  }
+
+  .roundPlayerResult {
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) auto !important;
+    gap: 9px !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 10px !important;
+    margin-bottom: 7px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 13px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    text-align: left !important;
+  }
+
+  .roundResultRank {
+    width: 30px !important;
+    height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    background: rgba(232, 189, 82, 0.12) !important;
+    color: #e8bd52 !important;
+    font-weight: 900 !important;
+  }
+
+  .roundPlayerResult small {
+    display: block !important;
+    margin-top: 2px !important;
+    color: rgba(255, 255, 255, 0.50) !important;
+    font-size: 10px !important;
+  }
+
+  .roundPlayerResult strong {
+    color: #e8bd52 !important;
+    font-size: 17px !important;
+  }
+
+  .roundPlayerResult > span:last-child {
+    display: none !important;
+  }
+}
