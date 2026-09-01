@@ -2001,8 +2001,10 @@ button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,.18)}
 
   padding: 14px;
 padding-bottom: calc(14px + env(safe-area-inset-bottom));
-max-height: calc(100vh - 110px);
-overflow-y: auto;
+max-height: calc(100dvh - 105px);
+display: flex;
+flex-direction: column;
+overflow: hidden;
 
   background: #07150f;
   border: 1px solid rgba(232, 189, 82, 0.28);
@@ -2050,6 +2052,10 @@ overflow-y: auto;
 .mobileMenuLinks {
   display: grid;
   gap: 6px;
+
+  overflow-y: auto;
+  min-height: 0;
+  padding-bottom: 85px;
 }
 
 .mobileMenuLinks > button {
