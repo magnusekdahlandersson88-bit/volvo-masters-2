@@ -427,14 +427,7 @@ function App() {
   const [notificationStatus, setNotificationStatus] = useState('')
   const [foregroundNotice, setForegroundNotice] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [showSplash, setShowSplash] = useState(true)
-  useEffect(() => {
-  const timer = setTimeout(() => {
-    setShowSplash(false)
-  }, 1500)
-
-  return () => clearTimeout(timer)
-}, [])
+  
   
   
 
@@ -644,21 +637,7 @@ function App() {
           <div><b>{foregroundNotice.title}</b><small>{foregroundNotice.body}</small></div>
         </button>
       )}
-      {showSplash && (
-  <div className="vmSplash">
-    <div className="vmSplashContent">
-      <img
-        src="/branding/vm-logo.png"
-        alt="Volvo Masters"
-        className="vmSplashLogo"
-      />
-
-      <div className="vmSplashLine" />
-
-      <small>VOLVO MASTERS</small>
-    </div>
-  </div>
-)}
+      
       <Topbar loading={data.loading} admin={admin} identity={identity} clearIdentity={clearIdentity} />
      {menuOpen && (
   <div
