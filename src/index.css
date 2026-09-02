@@ -4167,3 +4167,151 @@ overflow: hidden;
     color: rgba(255,255,255,.4) !important;
   }
 }
+/* ===== Premium Statistik - Spelare ===== */
+@media (max-width: 700px) {
+  .statPlayersPanel {
+    padding: 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .statPlayersPanel .sectionHead {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: end !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .statPlayersPanel .sectionHead small {
+    display: block !important;
+    margin-bottom: 3px !important;
+    color: #e8bd52 !important;
+    font-size: 8px !important;
+    font-weight: 800 !important;
+    letter-spacing: .12em !important;
+    text-transform: uppercase !important;
+  }
+
+  .statPlayersPanel .sectionHead h3 {
+    margin: 0 !important;
+    font-size: 19px !important;
+  }
+
+  .statPlayersPanel .sectionHead > span {
+    font-size: 9px !important;
+    color: rgba(255,255,255,.42) !important;
+  }
+
+  .statPlayerCards {
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .statPlayerCard {
+    padding: 13px !important;
+    border-radius: 16px !important;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(12,48,34,.96),
+        rgba(5,24,17,.98)
+      ) !important;
+    border: 1px solid rgba(232,189,82,.12) !important;
+  }
+
+  .statPlayerCardHead {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid rgba(255,255,255,.06) !important;
+  }
+
+  .statPlayerCardHead > div:first-child {
+    min-width: 0 !important;
+  }
+
+  .statPlayerCardHead small {
+    display: block !important;
+    font-size: 7px !important;
+    color: rgba(255,255,255,.4) !important;
+    text-transform: uppercase !important;
+    letter-spacing: .07em !important;
+  }
+
+  .statPlayerCardHead b {
+    display: block !important;
+    margin-top: 3px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 14px !important;
+  }
+
+  .statPlayerMainPoints {
+    flex: 0 0 auto !important;
+    text-align: right !important;
+  }
+
+  .statPlayerMainPoints strong {
+    display: block !important;
+    color: #e8bd52 !important;
+    font-size: 21px !important;
+    line-height: 1 !important;
+  }
+
+  .statPlayerCardGrid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .statPlayerCardGrid span {
+    min-width: 0 !important;
+    padding: 8px 4px !important;
+    border-radius: 11px !important;
+    text-align: center !important;
+    background: rgba(255,255,255,.03) !important;
+  }
+
+  .statPlayerCardGrid small {
+    display: block !important;
+    min-height: 18px !important;
+    font-size: 7px !important;
+    line-height: 1.15 !important;
+    color: rgba(255,255,255,.4) !important;
+  }
+
+  .statPlayerCardGrid strong {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: 12px !important;
+  }
+}
+/* ===== Statistik – mobil rubrikfix ===== */
+@media (max-width: 700px) {
+  .statsPage > .sectionHead {
+    display: block !important;
+    margin-bottom: 16px !important;
+  }
+
+  .statsPage > .sectionHead h2 {
+    margin: 0 !important;
+    font-size: 36px !important;
+    line-height: 1 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .statsPage > .sectionHead > span {
+    display: block !important;
+    margin-top: 8px !important;
+    font-size: 11px !important;
+    color: rgba(255,255,255,.48) !important;
+  }
+
+  .statTabs {
+    margin-bottom: 14px !important;
+  }
+}

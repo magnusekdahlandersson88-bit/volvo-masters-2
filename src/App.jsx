@@ -374,9 +374,37 @@ function leaderboard(players, rounds, courses, scores, playerHcp) {
     const totalNet = Math.round(results.reduce((sum, r) => sum + (r.net || 0), 0) * 10) / 10
     const totalRawPoints = results.reduce((sum, r) => sum + (r.points || 0), 0)
     const best = [...results].sort((a,b) => b.adj - a.adj).slice(0,4)
-    const bestRaw = [...results].sort((a,b) => b.points - a.points).slice(0,4)
-    const total = Math.round(best.reduce((sum, r) => sum + r.adj, 0) * 10) / 10
-    const best4RawPoints = bestRaw.reduce((sum, r) => sum + r.points, 0)
+
+const bestRaw = [...results]
+  .sort((a,b) => b.points - a.points)
+  .slice(0,4)
+
+const bestGrossRounds = [...results]
+  .filter(r => r.played === 18 && r.strokes > 0)
+  .sort((a,b) => a.strokes - b.strokes)
+  .slice(0,4)
+
+const bestNetRounds = [...results]
+  .filter(r => r.played === 18 && r.net > 0)
+  .sort((a,b) => a.net - b.net)
+  .slice(0,4)
+
+const total = Math.round(
+  best.reduce((sum, r) => sum + r.adj, 0) * 10
+) / 10
+
+const best4RawPoints = bestRaw.reduce(
+  (sum, r) => sum + r.points,
+  0
+)
+
+const best4Gross = bestGrossRounds.reduce(
+  (sum, r) => sum + r.strokes,
+  0
+)
+const best4Net = Math.round(
+  bestNetRounds.reduce((sum, r) => sum + r.net, 0) * 10
+) / 10
 
     return {
       player,
@@ -389,6 +417,8 @@ function leaderboard(players, rounds, courses, scores, playerHcp) {
       totalNet,
       totalRawPoints,
       best4RawPoints,
+      best4Gross,
+      best4Net,
       avgGross: results.length ? Math.round(totalGross / results.length * 10) / 10 : 0,
       avgNet: results.length ? Math.round(totalNet / results.length * 10) / 10 : 0,
       avgPoints: results.length ? Math.round(totalRawPoints / results.length * 10) / 10 : 0,
@@ -2130,6 +2160,8 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
       totalNet: row.totalNet || 0,
       totalRawPoints: row.totalRawPoints || 0,
       best4RawPoints: row.best4RawPoints || 0,
+      best4Gross: row.best4Gross || 0,
+      best4Net: row.best4Net || 0,
       adjustedBest4: row.total || 0,
       avgGross: row.avgGross || 0,
       avgNet: row.avgNet || 0,
@@ -2198,15 +2230,78 @@ const hardest = Object.values(
       <div className="panel wide statBreakdown"><h3>Hålfördelning</h3><div className="breakGrid"><span>🦅 Eagles <b>{eagles}</b></span><span>🐦 Birdies <b>{birdies}</b></span><span>✅ Par <b>{pars}</b></span><span>☝️ Bogeys <b>{bogeys}</b></span><span>✌️ Dubbel+ <b>{doubles}</b></span></div></div>
     </div>}
 
-    {mode === 'players' && <div className="panel statPanelScrollable">
-      <h3>Spelarstatistik</h3>
-      <div className="statTable extendedStatsTable">
-        <div className="statTableHead"><span>Spelare</span><span>R</span><span>Brutto totalt</span><span>Netto totalt</span><span>Poäng totalt</span><span>Bästa 4</span><span>Justerat 4</span><span>Snitt p</span></div>
-        {perPlayer.map(player => <div className="statTableRow" key={player.player}>
-          <b>{player.player}</b><span>{player.rounds}</span><span>{player.totalGross || '—'}</span><span>{player.totalNet || '—'}</span><span>{player.totalRawPoints}p</span><span>{player.best4RawPoints}p</span><span>{player.adjustedBest4}p</span><span>{player.avgPoints}</span>
-        </div>)}
+    {mode === 'players' && (
+  <div className="panel statPlayersPanel">
+    <div className="sectionHead">
+      <div>
+        <small>Spelarstatistik</small>
+        <h3>Alla spelare</h3>
       </div>
-    </div>}
+      <span>{perPlayer.length} spelare</span>
+    </div>
+
+    <div className="statPlayerCards">
+      {perPlayer.map(player => (
+        <article className="statPlayerCard" key={player.player}>
+          <div className="statPlayerCardHead">
+            <div>
+              <small>Spelare</small>
+              <b>{player.player}</b>
+            </div>
+
+            <div className="statPlayerMainPoints">
+              <strong>{player.best4RawPoints}p</strong>
+              <small>Bästa 4</small>
+            </div>
+          </div>
+
+          <div className="statPlayerCardGrid">
+            <span>
+              <small>Rundor</small>
+              <strong>{player.rounds}</strong>
+            </span>
+
+            <span>
+              <small>Poäng totalt</small>
+              <strong>{player.totalRawPoints}p</strong>
+            </span>
+
+            <span>
+              <small>Justerat 4</small>
+              <strong>{player.adjustedBest4}p</strong>
+            </span>
+
+            <span>
+              <small>Snitt</small>
+              <strong>{player.avgPoints}</strong>
+            </span>
+
+            <span>
+  <small>Brutto</small>
+  <strong>{player.totalGross || '—'}</strong>
+</span>
+
+<span>
+  <small>Bästa 4 brutto</small>
+  <strong>{player.best4Gross || '—'}</strong>
+</span>
+
+<span>
+  <small>Netto</small>
+  <strong>{player.totalNet || '—'}</strong>
+</span>
+
+<span>
+  <small>Bästa 4 netto</small>
+  <strong>{player.best4Net || '—'}</strong>
+</span>
+  
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+)}
 
     {mode === 'records' && <div className="cards">
       <article className="recordCard"><small>Bästa råpoäng</small><b>{bestPoints ? `${bestPoints.points}p` : '—'}</b><span>{bestPoints?.player}</span><em>{bestPoints?.course?.name}</em></article>
