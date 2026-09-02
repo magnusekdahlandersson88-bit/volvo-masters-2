@@ -28,7 +28,7 @@ export default function Gallery({
           <span>Bilder och videos från Volvo Masters</span>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <div className="galleryActions">
   <label className="uploadButton">
     📷 Ta foto
     <input
@@ -78,7 +78,7 @@ export default function Gallery({
               ) : (
                 <img src={mediaUrl(item)} alt={item.name || "Galleri"} />
               )}
-              <span>{item.name || "Volvo Masters"}</span>
+              
             </button>
           ))}
         </div>
