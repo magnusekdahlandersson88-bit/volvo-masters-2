@@ -3258,3 +3258,193 @@ overflow: hidden;
     background: #4ee68b !important;
   }
 }
+/* ===== Premium Resultat / Leaderboard ===== */
+@media (max-width: 700px) {
+  .leaderboardPro {
+    gap: 16px !important;
+    padding-bottom: 95px !important;
+  }
+
+  /* Rubrik */
+  .leaderboardPro > .sectionHead {
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 0 2px !important;
+  }
+
+  .leaderboardPro > .sectionHead h2 {
+    font-size: 34px !important;
+    line-height: .95 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .leaderboardPro > .sectionHead > span {
+    padding: 7px 10px !important;
+    font-size: 10px !important;
+  }
+
+  /* ===== Topp 3 ===== */
+  .podiumStage {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    align-items: end !important;
+  }
+
+  .podiumStage > article {
+    min-width: 0 !important;
+    min-height: 185px !important;
+    padding: 13px 7px !important;
+    border-radius: 18px !important;
+    box-shadow: 0 12px 28px rgba(0,0,0,.18) !important;
+  }
+
+  /* Vinnaren ligger i mitten */
+  .podiumStage > article:nth-child(2) {
+    min-height: 215px !important;
+    padding-top: 16px !important;
+    border-color: rgba(232,189,82,.55) !important;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(113,82,21,.96),
+        rgba(14,52,37,.98)
+      ) !important;
+  }
+
+  .podiumStage > article > div:first-child {
+    font-size: 28px !important;
+  }
+
+  .podiumStage > article:nth-child(2) > div:first-child {
+    font-size: 34px !important;
+  }
+
+  /* Profilbilder */
+  .podiumStage > article > div:nth-child(2) {
+    width: 55px !important;
+    height: 55px !important;
+    font-size: 17px !important;
+    border-width: 2px !important;
+  }
+
+  .podiumStage > article:nth-child(2) > div:nth-child(2) {
+    width: 68px !important;
+    height: 68px !important;
+  }
+
+  /* Namn */
+  .podiumStage > article > div:nth-child(3) {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .podiumStage > article > div:nth-child(3) b {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+  }
+
+  .podiumStage > article:nth-child(2) > div:nth-child(3) b {
+    font-size: 14px !important;
+  }
+
+  .podiumStage > article > div:nth-child(3) small {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: 8px !important;
+  }
+
+  /* Poäng */
+  .podiumStage > article > div:last-child strong {
+    font-size: 23px !important;
+  }
+
+  .podiumStage > article:nth-child(2) > div:last-child strong {
+    font-size: 29px !important;
+  }
+
+  .podiumStage > article > div:last-child small {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: 8px !important;
+    white-space: nowrap !important;
+  }
+
+  /* ===== Hela leaderboarden ===== */
+  .leaderboardPro > .panel {
+    padding: 8px !important;
+    border-radius: 22px !important;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(10,42,30,.96),
+        rgba(5,24,17,.98)
+      ) !important;
+    border: 1px solid rgba(232,189,82,.13) !important;
+  }
+
+  .leaderRow.enhanced {
+    grid-template-columns: 32px 42px minmax(0,1fr) auto !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    margin-bottom: 6px !important;
+    border-radius: 14px !important;
+  }
+
+  .leaderRow.enhanced.topThree {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(232,189,82,.10),
+        rgba(255,255,255,.025)
+      ) !important;
+    border-color: rgba(232,189,82,.17) !important;
+  }
+
+  .leaderRow .rank {
+    font-size: 16px !important;
+  }
+
+  .leaderRow.topThree .rank {
+    font-size: 20px !important;
+  }
+
+  /* Avatar i listan */
+  .leaderRow.enhanced > div:nth-child(2) {
+    width: 39px !important;
+    height: 39px !important;
+    font-size: 11px !important;
+  }
+
+  /* Spelarnamn + info */
+  .leaderRow.enhanced > div:nth-child(3) {
+    min-width: 0 !important;
+  }
+
+  .leaderRow.enhanced > div:nth-child(3) b,
+  .leaderRow.enhanced > div:nth-child(3) strong {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .leaderRow.enhanced > div:nth-child(3) b {
+    font-size: 13px !important;
+  }
+
+  .leaderRow.enhanced > div:nth-child(3) small {
+    font-size: 9px !important;
+    color: rgba(255,255,255,.48) !important;
+  }
+
+  /* Totalpoäng längst till höger */
+  .leaderRow.enhanced > :last-child {
+    color: #e8bd52 !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+  }
+}
