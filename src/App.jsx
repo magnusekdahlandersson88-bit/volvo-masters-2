@@ -2144,12 +2144,45 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
 
   const topBirdiePlayer = [...perPlayer].sort((a,b)=>(b.birdies + b.eagles) - (a.birdies + a.eagles))[0]
   const topParPlayer = [...perPlayer].sort((a,b)=>b.pars-a.pars)[0]
-  const hardest = Array.from({length:18}, (_,i) => {
-    const holeRows = holes.filter(h => h.hole === i+1)
-    const avgPoints = holeRows.length ? holeRows.reduce((sum,h)=>sum+(h.pts ?? 0),0)/holeRows.length : 0
-    const avgDiff = holeRows.length ? holeRows.reduce((sum,h)=>sum+(h.diff ?? 0),0)/holeRows.length : 0
-    return {hole:i+1, played:holeRows.length, avgPoints:Math.round(avgPoints*10)/10, avgDiff:Math.round(avgDiff*10)/10}
-  }).filter(h=>h.played).sort((a,b)=>a.avgPoints-b.avgPoints)
+  const courseHoles = allRounds.flatMap(result =>
+  result.holeBreakdown
+    .filter(hole => hole.diff !== null)
+    .map(hole => ({
+      ...hole,
+      course: result.course.name,
+    }))
+)
+
+const hardest = Object.values(
+  courseHoles.reduce((acc, hole) => {
+    const key = `${hole.course}__${hole.hole}`
+
+    if (!acc[key]) {
+      acc[key] = {
+        course: hole.course,
+        hole: hole.hole,
+        played: 0,
+        totalPoints: 0,
+        totalDiff: 0,
+      }
+    }
+
+    acc[key].played += 1
+    acc[key].totalPoints += hole.pts ?? 0
+    acc[key].totalDiff += hole.diff ?? 0
+
+    return acc
+  }, {})
+)
+  .map(hole => ({
+    ...hole,
+    avgPoints: Math.round((hole.totalPoints / hole.played) * 10) / 10,
+    avgDiff: Math.round((hole.totalDiff / hole.played) * 10) / 10,
+  }))
+  .sort((a, b) =>
+    b.avgDiff - a.avgDiff ||
+    a.avgPoints - b.avgPoints
+  )
   const tabs = [['overview','Översikt'],['players','Spelare'],['records','Rekord'],['holes','Hål']]
 
   return <section className="statsPage">
@@ -2184,7 +2217,47 @@ function Stats({board, rounds, players, courses, scores, playerHcp}) {
       <article className="recordCard"><small>Flest par</small><b>{topParPlayer?.pars || 0}</b><span>{topParPlayer?.player}</span><em>Brutto par totalt</em></article>
     </div>}
 
-    {mode === 'holes' && <div className="panel"><h3>Svåraste hålen</h3>{hardest.map(h => <div className="leaderRow" key={h.hole}><div><b>Hål {h.hole}</b><small>{h.played} registrerade scorer</small></div><strong>{h.avgPoints}p</strong><span className="muted">{h.avgDiff > 0 ? '+' : ''}{h.avgDiff} mot par</span></div>)}</div>}
+    {mode === 'holes' && (
+  <div className="panel hardestHolesPanel">
+    <div className="sectionHead">
+      <div>
+        <small>Hålstatistik</small>
+        <h3>Svåraste hålen</h3>
+      </div>
+      <span>Alla banor</span>
+    </div>
+
+    <div className="hardestHoleList">
+      {hardest.map((h, index) => (
+        <div className="hardestHoleRow" key={`${h.course}-${h.hole}`}>
+          <div className="hardestHoleRank">
+            {index + 1}
+          </div>
+
+          <div className="hardestHoleInfo">
+            <b>{h.course}</b>
+            <small>
+              Hål {h.hole} · {h.played} registrerade scorer
+            </small>
+          </div>
+
+          <div className="hardestHoleNumbers">
+            <strong>
+              {h.avgDiff > 0 ? '+' : ''}
+              {h.avgDiff}
+            </strong>
+            <small>mot par</small>
+          </div>
+
+          <div className="hardestHolePoints">
+            <strong>{h.avgPoints}p</strong>
+            <small>snitt</small>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
   </section>
 }
 

@@ -3821,3 +3821,349 @@ overflow: hidden;
     border-color: rgba(232,189,82,.48) !important;
   }
 }
+/* ===== Premium Statistik ===== */
+@media (max-width: 700px) {
+  .statsPage {
+    display: grid !important;
+    gap: 12px !important;
+    padding-bottom: 95px !important;
+  }
+
+  /* Rubrik */
+  .statsPage > .sectionHead {
+    display: flex !important;
+    align-items: end !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: 0 2px !important;
+  }
+
+  .statsPage > .sectionHead h2 {
+    margin: 0 !important;
+    font-size: 32px !important;
+    line-height: 1 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .statsPage > .sectionHead span {
+    max-width: 165px !important;
+    text-align: right !important;
+    font-size: 9px !important;
+    line-height: 1.35 !important;
+    color: rgba(255,255,255,.45) !important;
+  }
+
+  /* Flikar */
+  .statTabs {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 5px !important;
+    padding: 5px !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.035) !important;
+    border: 1px solid rgba(255,255,255,.055) !important;
+  }
+
+  .statTabs button {
+    min-width: 0 !important;
+    height: 42px !important;
+    padding: 4px 2px !important;
+    border: 0 !important;
+    border-radius: 13px !important;
+    background: transparent !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    color: rgba(255,255,255,.50) !important;
+  }
+
+  .statTabs button.active {
+    background: rgba(232,189,82,.13) !important;
+    color: #e8bd52 !important;
+    box-shadow: inset 0 0 0 1px rgba(232,189,82,.28) !important;
+  }
+
+  /* Översiktens kort */
+  .statsPage .homeGrid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .statsPage .homeGrid > .metric,
+  .statsPage .homeGrid > .panel:not(.statBreakdown) {
+    min-width: 0 !important;
+  }
+
+  .statsPage .metric {
+    min-height: 112px !important;
+    padding: 14px !important;
+    border-radius: 19px !important;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(12,48,34,.98),
+        rgba(5,24,17,.98)
+      ) !important;
+    border: 1px solid rgba(232,189,82,.12) !important;
+    box-shadow: none !important;
+  }
+
+  .statsPage .metric small {
+    display: block !important;
+    font-size: 8px !important;
+    line-height: 1.25 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+    color: rgba(255,255,255,.45) !important;
+  }
+
+  .statsPage .metric strong {
+    display: block !important;
+    margin: 9px 0 5px !important;
+    font-size: 27px !important;
+    line-height: 1 !important;
+    color: #e8bd52 !important;
+  }
+
+  .statsPage .metric span,
+  .statsPage .metric p {
+    font-size: 9px !important;
+    line-height: 1.3 !important;
+    color: rgba(255,255,255,.48) !important;
+  }
+
+  /* Hålfördelning */
+  .statBreakdown {
+    grid-column: 1 / -1 !important;
+    padding: 16px !important;
+    border-radius: 22px !important;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(10,42,30,.98),
+        rgba(5,24,17,.98)
+      ) !important;
+    border: 1px solid rgba(232,189,82,.12) !important;
+  }
+
+  .statBreakdown h3 {
+    margin: 0 0 12px !important;
+    font-size: 17px !important;
+  }
+
+  .breakGrid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 7px !important;
+  }
+
+  .breakGrid span {
+    min-height: 46px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 10px 11px !important;
+    border-radius: 14px !important;
+    background: rgba(255,255,255,.035) !important;
+    border: 1px solid rgba(255,255,255,.055) !important;
+    font-size: 10px !important;
+  }
+
+  .breakGrid b {
+    color: #e8bd52 !important;
+    font-size: 15px !important;
+  }
+
+  .breakGrid span:last-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Rekordkort */
+  .statsPage .cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .recordCard {
+    min-width: 0 !important;
+    min-height: 145px !important;
+    padding: 14px !important;
+    border-radius: 19px !important;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(12,48,34,.98),
+        rgba(5,24,17,.98)
+      ) !important;
+    border: 1px solid rgba(232,189,82,.12) !important;
+    box-shadow: none !important;
+  }
+
+  .recordCard small {
+    display: block !important;
+    font-size: 8px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+    color: rgba(255,255,255,.43) !important;
+  }
+
+  .recordCard b {
+    display: block !important;
+    margin: 11px 0 7px !important;
+    font-size: 29px !important;
+    line-height: 1 !important;
+    color: #e8bd52 !important;
+  }
+
+  .recordCard span {
+    display: block !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+  }
+
+  .recordCard em {
+    display: block !important;
+    margin-top: 4px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 8px !important;
+    font-style: normal !important;
+    color: rgba(255,255,255,.42) !important;
+  }
+
+  /* Svåraste hålen */
+  .statsPage > .panel {
+    border-radius: 22px !important;
+  }
+
+  .statsPage > .panel > h3 {
+    font-size: 17px !important;
+  }
+
+  .statsPage .leaderRow {
+    padding: 11px !important;
+    border-radius: 14px !important;
+    margin-bottom: 6px !important;
+    background: rgba(255,255,255,.035) !important;
+    border: 1px solid rgba(255,255,255,.055) !important;
+  }
+
+  .statsPage .leaderRow b {
+    font-size: 12px !important;
+  }
+
+  .statsPage .leaderRow small,
+  .statsPage .leaderRow .muted {
+    font-size: 8px !important;
+    color: rgba(255,255,255,.42) !important;
+  }
+
+  .statsPage .leaderRow strong {
+    color: #e8bd52 !important;
+  }
+}
+/* ===== Premium Hålstatistik ===== */
+@media (max-width: 700px) {
+  .hardestHolesPanel {
+    padding: 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .hardestHolesPanel .sectionHead {
+    display: flex !important;
+    align-items: end !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .hardestHolesPanel .sectionHead small {
+    display: block !important;
+    margin-bottom: 3px !important;
+    color: #e8bd52 !important;
+    font-size: 8px !important;
+    font-weight: 800 !important;
+    letter-spacing: .12em !important;
+    text-transform: uppercase !important;
+  }
+
+  .hardestHolesPanel .sectionHead h3 {
+    margin: 0 !important;
+    font-size: 19px !important;
+  }
+
+  .hardestHolesPanel .sectionHead > span {
+    font-size: 9px !important;
+    color: rgba(255,255,255,.42) !important;
+  }
+
+  .hardestHoleList {
+    display: grid !important;
+    gap: 7px !important;
+  }
+
+  .hardestHoleRow {
+    display: grid !important;
+    grid-template-columns: 30px minmax(0,1fr) 48px 48px !important;
+    gap: 8px !important;
+    align-items: center !important;
+    padding: 10px !important;
+    border-radius: 14px !important;
+    background: rgba(255,255,255,.035) !important;
+    border: 1px solid rgba(255,255,255,.055) !important;
+  }
+
+  .hardestHoleRank {
+    width: 27px !important;
+    height: 27px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 50% !important;
+    background: rgba(232,189,82,.12) !important;
+    color: #e8bd52 !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+  }
+
+  .hardestHoleInfo {
+    min-width: 0 !important;
+  }
+
+  .hardestHoleInfo b {
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+  }
+
+  .hardestHoleInfo small {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: 8px !important;
+    color: rgba(255,255,255,.42) !important;
+  }
+
+  .hardestHoleNumbers,
+  .hardestHolePoints {
+    text-align: center !important;
+  }
+
+  .hardestHoleNumbers strong,
+  .hardestHolePoints strong {
+    display: block !important;
+    color: #e8bd52 !important;
+    font-size: 13px !important;
+  }
+
+  .hardestHoleNumbers small,
+  .hardestHolePoints small {
+    display: block !important;
+    margin-top: 2px !important;
+    font-size: 7px !important;
+    color: rgba(255,255,255,.4) !important;
+  }
+}
