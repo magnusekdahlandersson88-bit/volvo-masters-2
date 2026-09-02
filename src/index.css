@@ -4290,6 +4290,89 @@ overflow: hidden;
     font-size: 12px !important;
   }
 }
+/* ===== Statistik – desktop spelarkort ===== */
+@media (min-width: 701px) {
+  .statPlayerCards {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+
+  }
+
+  .statPlayerCard {
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(
+      180deg,
+      rgba(12,48,34,.96),
+      rgba(5,24,17,.98)
+    );
+    border: 1px solid rgba(232,189,82,.12);
+  }
+
+  .statPlayerCardHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+
+  .statPlayerCardHead small {
+    display: block;
+    font-size: 10px;
+    color: rgba(255,255,255,.45);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .statPlayerCardHead b {
+    display: block;
+    margin-top: 4px;
+    font-size: 18px;
+  }
+
+  .statPlayerMainPoints {
+    text-align: right;
+  }
+
+  .statPlayerMainPoints strong {
+    display: block;
+    color: #e8bd52;
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .statPlayerCardGrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .statPlayerCardGrid span {
+    min-width: 0;
+    padding: 10px 6px;
+    border-radius: 12px;
+    text-align: center;
+    background: rgba(255,255,255,.03);
+  }
+
+  .statPlayerCardGrid small {
+    display: block;
+    min-height: 18px;
+    font-size: 9px;
+    line-height: 1.15;
+    color: rgba(255,255,255,.45);
+  }
+
+  .statPlayerCardGrid strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 15px;
+  }
+}
 /* ===== Statistik – mobil rubrikfix ===== */
 @media (max-width: 700px) {
   .statsPage > .sectionHead {
