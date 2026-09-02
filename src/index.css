@@ -4683,3 +4683,133 @@ overflow: hidden;
     transition: none !important;
   }
 }
+/* ===== Premium Chat ===== */
+
+.chatPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.chatPanel .messages {
+  min-height: 520px;
+  padding: 22px;
+  border-radius: 22px;
+}
+
+.chatPanel .messages h2 {
+  margin: 0 0 18px;
+  font-size: 32px;
+  letter-spacing: -.03em;
+}
+
+.chatPanel .msg {
+  max-width: 78%;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+.chatPanel .msg b {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: #e8bd52;
+}
+
+.chatPanel .msg p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.chatPanel .msg small {
+  display: block;
+  margin-top: 6px;
+  font-size: 9px;
+  color: rgba(255,255,255,.38);
+}
+
+.chatPanel .composer {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 20px;
+}
+
+.chatPanel .composer select,
+.chatPanel .composer textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+  color: #fff;
+}
+
+.chatPanel .composer select {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.chatPanel .composer textarea {
+  min-height: 120px;
+  padding: 12px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.chatPanel .composer button {
+  min-height: 46px;
+  border: 1px solid rgba(232,189,82,.38);
+  border-radius: 14px;
+  background: rgba(232,189,82,.13);
+  color: #e8bd52;
+  font-weight: 800;
+}
+
+@media (max-width: 700px) {
+  .chatPanel {
+    display: block;
+    padding-bottom: 90px;
+  }
+
+  .chatPanel .messages {
+    min-height: 0;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .chatPanel .messages h2 {
+    font-size: 34px;
+    margin-bottom: 16px;
+  }
+
+  .chatPanel .msg {
+    max-width: 88%;
+    padding: 11px 12px;
+    margin-bottom: 9px;
+    border-radius: 14px;
+    box-shadow: none !important;
+  }
+
+  .chatPanel .composer {
+    position: static;
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .chatPanel .composer textarea {
+    min-height: 92px;
+  }
+
+  .chatPanel .composer button {
+    min-height: 44px;
+  }
+}
