@@ -1802,7 +1802,7 @@ const finalCourse = finalRound ? courseFor(courses, finalRound) : null
   </strong>
 ) : (
   <strong>
-    {row.minNet} netto eller sämre
+    minst {row.minNet} netto
   </strong>
 )}
             
