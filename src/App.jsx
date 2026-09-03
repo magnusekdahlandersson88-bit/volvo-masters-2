@@ -425,7 +425,95 @@ const best4Net = Math.round(
     }
   }).sort((a,b) => b.total - a.total || b.rounds - a.rounds)
 }
+function projectedBest4Points(row, finalPoints) {
+  const values = (row.results || [])
+    .filter(r => r.played === 18 && r.points >= 0)
+    .map(r => Number(r.points) || 0)
 
+  values.push(Number(finalPoints) || 0)
+
+  return values
+    .sort((a, b) => b - a)
+    .slice(0, 4)
+    .reduce((sum, value) => sum + value, 0)
+}
+function projectedBest4Adjusted(row, finalPoints, finalCourse) {
+  const slope = finalCourse?.slope || 113
+
+  const finalAdjusted =
+    Number(finalPoints) > 0
+      ? Math.round(
+          Number(finalPoints) * (113 / slope) * 10
+        ) / 10
+      : 0
+
+  const values = (row.results || [])
+    .filter(r => r.played === 18 && r.adj > 0)
+    .map(r => Number(r.adj) || 0)
+
+  values.push(finalAdjusted)
+
+  const total = values
+    .sort((a, b) => b - a)
+    .slice(0, 4)
+    .reduce((sum, value) => sum + value, 0)
+
+  return Math.round(total * 10) / 10
+}
+
+function projectedBest4Net(row, finalNet) {
+  const values = (row.results || [])
+    .filter(r => r.played === 18 && r.net > 0)
+    .map(r => Number(r.net))
+
+  values.push(Number(finalNet))
+
+  return Math.round(
+    values
+      .sort((a, b) => a - b)
+      .slice(0, 4)
+      .reduce((sum, value) => sum + value, 0) * 10
+  ) / 10
+}
+
+function maxOpponentPoints(candidate, opponent, candidateFinalPoints, finalCourse) {
+  const candidateTotal = projectedBest4Adjusted(
+    candidate,
+    candidateFinalPoints,
+    finalCourse
+  )
+
+  let maxAllowed = null
+
+  for (let points = 0; points <= 60; points++) {
+    const opponentTotal = projectedBest4Adjusted(
+      opponent,
+      points,
+      finalCourse
+    )
+
+    if (candidateTotal > opponentTotal) {
+      maxAllowed = points
+    }
+  }
+
+
+  return maxAllowed === 60 ? 'safe' : maxAllowed
+}
+
+function opponentNetThreshold(candidate, opponent, candidateFinalNet) {
+  const candidateTotal = projectedBest4Net(candidate, candidateFinalNet)
+
+  for (let net = 45; net <= 140; net++) {
+    const opponentTotal = projectedBest4Net(opponent, net)
+
+    if (candidateTotal < opponentTotal) {
+      return net === 45 ? 'safe' : net
+    }
+  }
+
+  return null
+}
 function useLocalIdentity() {
   const [identity, setIdentity] = useState(() => {
     try { return JSON.parse(localStorage.getItem('vm2_identity') || '{}') }
@@ -758,7 +846,14 @@ function App() {
   setSelectedRound={setSelectedRound}
   heroImages={data.heroImages}
 />}
-      {view === 'leaderboard' && <Leaderboard board={board} playerPhotos={data.playerPhotos} />}
+      {view === 'leaderboard' && (
+  <Leaderboard
+    board={board}
+    playerPhotos={data.playerPhotos}
+    rounds={data.rounds}
+    courses={data.courses}
+  />
+)}
       {view === 'rounds' && <Rounds admin={admin} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} setView={setView} setSelectedRound={setSelectedRound} updateRoundGroups={updateRoundGroups} />}
       {view === 'score' && <BallScorecard admin={admin} identity={identity} updateIdentity={updateIdentity} players={data.players} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} selectedRound={selectedRound} setSelectedRound={setSelectedRound} updateHole={updateHole} updateHcp={updateHcp} />}
       {view === 'live' && (
@@ -1214,8 +1309,44 @@ function Podium({ board }) {
 }
 
 
-function Leaderboard({ board, playerPhotos = {} }) {
+function Leaderboard({ board, playerPhotos = {}, rounds = [], courses = [] }) {
+  const [victoryPlayer, setVictoryPlayer] = useState(board[0]?.player || '')
+  const [victoryPoints, setVictoryPoints] = useState(38)
+  const [victoryNet, setVictoryNet] = useState(70)
+  const finalRound = rounds[rounds.length - 1]
+const finalCourse = finalRound ? courseFor(courses, finalRound) : null
+
   const topThree = board.slice(0, 3)
+
+  const victoryCandidate =
+    board.find(player => player.player === victoryPlayer) || board[0]
+
+  const victoryOpponents = board.filter(
+    player => player.player !== victoryCandidate?.player
+  )
+
+  const pointsScenarios = victoryCandidate
+    ? victoryOpponents.map(opponent => ({
+        player: opponent.player,
+        maxPoints: maxOpponentPoints(
+          victoryCandidate,
+          opponent,
+          victoryPoints,
+          finalCourse
+        ),
+      }))
+    : []
+
+  const netScenarios = victoryCandidate
+    ? victoryOpponents.map(opponent => ({
+        player: opponent.player,
+        minNet: opponentNetThreshold(
+          victoryCandidate,
+          opponent,
+          victoryNet
+        ),
+      }))
+    : []
   const podiumOrder = [topThree[1], topThree[0], topThree[2]].filter(Boolean)
   const medals = {
     0: '🥇',
@@ -1517,7 +1648,161 @@ function Leaderboard({ board, playerPhotos = {} }) {
           )
         })}
       </div>
+      <div className="victoryPath panel">
+  <div className="victoryPathHead">
+    <div>
+      <small>INFÖR SISTA DELTÄVLINGEN</small>
+      <h3>🏆 Vägen till seger</h3>
+      <p>Se vad som krävs för att vinna totalt.</p>
+    </div>
 
+    <select
+      value={victoryCandidate?.player || ''}
+      onChange={e => setVictoryPlayer(e.target.value)}
+    >
+      {board.map(player => (
+        <option key={player.player} value={player.player}>
+          {player.player}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="victorySimulators">
+
+    {/* POÄNGBOGEY */}
+    <article className="victoryCompetition">
+      <div className="victoryTitle">
+        <div>
+          <small>POÄNGBOGEY</small>
+          <h4>⛳ Vinna på poäng</h4>
+        </div>
+      </div>
+
+      <div className="victoryInput">
+        <label>
+          Om {victoryCandidate?.player?.split(' ')[0]} gör
+        </label>
+
+        <div>
+          <input
+            type="number"
+            min="0"
+            max="60"
+            value={victoryPoints}
+            onChange={e => setVictoryPoints(Number(e.target.value))}
+          />
+          <span>poäng</span>
+        </div>
+      </div>
+
+      <div className="victoryTotal">
+        <span>Justerad bästa 4</span>
+<strong>
+  {victoryCandidate
+    ? projectedBest4Adjusted(
+        victoryCandidate,
+        victoryPoints,
+        finalCourse
+      )
+    : 0}p
+</strong>
+      </div>
+
+      <div className="victoryRequirementTitle">
+        Då krävs detta av konkurrenterna
+      </div>
+
+      <div className="victoryRivals">
+        {pointsScenarios.map(row => (
+          <div className="victoryRival" key={row.player}>
+            <span>{row.player}</span>
+
+            {row.maxPoints === 'safe' ? (
+  <strong className="victorySafe">
+    Kan inte gå om
+  </strong>
+) : row.maxPoints == null ? (
+  <strong className="victoryImpossible">
+    Går inte att passera
+  </strong>
+) : (
+  <strong>
+    max {row.maxPoints}p
+  </strong>
+)}
+            
+          </div>
+        ))}
+      </div>
+    </article>
+
+
+    {/* NETTOSLAG */}
+    <article className="victoryCompetition">
+      <div className="victoryTitle">
+        <div>
+          <small>NETTOSLAG</small>
+          <h4>🎯 Vinna på slag</h4>
+        </div>
+      </div>
+
+      <div className="victoryInput">
+        <label>
+          Om {victoryCandidate?.player?.split(' ')[0]} går
+        </label>
+
+        <div>
+          <input
+            type="number"
+            min="45"
+            max="140"
+            value={victoryNet}
+            onChange={e => setVictoryNet(Number(e.target.value))}
+          />
+          <span>netto</span>
+        </div>
+      </div>
+
+      <div className="victoryTotal">
+        <span>Ny bästa 4</span>
+        <strong>
+          {victoryCandidate
+            ? projectedBest4Net(victoryCandidate, victoryNet)
+            : 0}
+        </strong>
+      </div>
+
+      <div className="victoryRequirementTitle">
+        Då krävs detta av konkurrenterna
+      </div>
+
+      <div className="victoryRivals">
+        {netScenarios.map(row => (
+          <div className="victoryRival" key={row.player}>
+            <span>{row.player}</span>
+
+            {row.minNet === 'safe' ? (
+  <strong className="victorySafe">
+    Kan inte gå om
+  </strong>
+) : row.minNet == null ? (
+  <strong className="victoryImpossible">
+    Går inte att passera
+  </strong>
+) : (
+  <strong>
+    {row.minNet} netto eller sämre
+  </strong>
+)}
+            
+          </div>
+        ))}
+      </div>
+    </article>
+
+  </div>
+</div>
       <style>{`
         @media (max-width: 760px) {
           .leaderboardPro .podiumStage {
