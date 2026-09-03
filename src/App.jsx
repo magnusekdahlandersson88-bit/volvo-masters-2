@@ -2694,48 +2694,115 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
   }
 
   async function saveCourses() {
-  const skovdePar = [
-    4, 4, 5, 3, 4, 3, 5, 4, 4,
-    5, 3, 4, 5, 3, 4, 4, 3, 5
-  ]
+  const courseHoleData = {
+    breviken: {
+      par: [
+        4,5,3,4,3,5,4,4,4,
+        4,4,4,4,3,5,3,4,5
+      ],
+      si: [
+        5,7,15,11,13,3,17,1,9,
+        14,12,4,10,18,2,16,6,8
+      ],
+      emoji: '🌳'
+    },
 
-  const skovdeSi = [
-    9, 13, 3, 15, 1, 5, 11, 17, 7,
-    2, 8, 4, 16, 10, 18, 14, 6, 12
-  ]
+    billingen: {
+      par: [
+        4,3,4,3,5,3,4,4,4,
+        3,4,5,4,3,4,4,4,5
+      ],
+      si: [
+        14,8,12,16,4,18,2,10,6,
+        15,13,5,1,9,17,3,7,11
+      ],
+      emoji: '⛰️'
+    },
 
-  const nextCourses = courseDrafts.map(course => {
-  const name = String(course.name || '').toLowerCase()
+    knistad: {
+      par: [
+        5,4,4,3,4,4,5,4,3,
+        4,4,5,3,4,4,4,3,5
+      ],
+      si: [
+        5,9,13,17,3,11,1,7,15,
+        10,14,4,16,8,2,6,18,12
+      ],
+      emoji: '🏡'
+    },
 
-  let emoji = course.emoji || '⛳'
+    skovde: {
+      par: [
+        4,4,5,3,4,3,5,4,4,
+        5,3,4,5,3,4,4,3,5
+      ],
+      si: [
+        9,13,3,15,1,5,11,17,7,
+        2,8,4,16,10,18,14,6,12
+      ],
+      emoji: '🌿'
+    },
 
-  if (name.includes('breviken')) emoji = '🌳'
-  if (name.includes('billingen')) emoji = '⛰️'
-  if (name.includes('knistad')) emoji = '🏡'
-  if (name.includes('skövde') || name.includes('skovde')) emoji = '🌿'
-  if (name.includes('mariestad')) emoji = '🌊'
-  if (name.includes('läckö') || name.includes('lacko')) emoji = '🏰'
+    mariestad: {
+      par: [
+        4,5,4,3,4,3,4,4,5,
+        4,4,4,5,3,4,3,5,5
+      ],
+      si: [
+        11,7,5,17,3,15,1,13,9,
+        10,18,14,6,16,2,4,8,12
+      ],
+      emoji: '🌊'
+    },
 
-  if (name.includes('skövde') || name.includes('skovde')) {
-    return {
-      ...course,
-      emoji,
-      holes: skovdePar.map((par, index) => ({
-        par,
-        si: skovdeSi[index]
-      }))
+    lacko: {
+      par: [
+        5,4,3,5,4,3,4,4,3,
+        5,4,4,3,4,4,5,4,4
+      ],
+      si: [
+        5,17,15,1,3,13,9,7,11,
+        16,18,6,14,8,2,4,10,12
+      ],
+      emoji: '🏰'
     }
   }
 
-  return {
-    ...course,
-    emoji
-  }
-})
-await flash(
-  'Banorna är sparade.',
-  () => save({ courses: nextCourses })
-)
+  const nextCourses = courseDrafts.map(course => {
+    const name = String(course.name || '').toLowerCase()
+
+    let data = null
+
+    if (name.includes('breviken')) data = courseHoleData.breviken
+    if (name.includes('billingen')) data = courseHoleData.billingen
+    if (name.includes('knistad')) data = courseHoleData.knistad
+
+    if (name.includes('skövde') || name.includes('skovde')) {
+      data = courseHoleData.skovde
+    }
+
+    if (name.includes('mariestad')) data = courseHoleData.mariestad
+
+    if (name.includes('läckö') || name.includes('lacko')) {
+      data = courseHoleData.lacko
+    }
+
+    if (!data) return course
+
+    return {
+      ...course,
+      emoji: data.emoji,
+      holes: data.par.map((par, index) => ({
+        par,
+        si: data.si[index]
+      }))
+    }
+  })
+
+  await flash(
+    'Banorna är sparade.',
+    () => save({ courses: nextCourses })
+  )
 }
 
   const tabs = [['overview','Översikt'],['players','Spelare'],['rounds','Deltävlingar'],['groups','Bollar'],['courses','Banor'],['heroes','Hero-bilder'],['notifications','Notiser']]
