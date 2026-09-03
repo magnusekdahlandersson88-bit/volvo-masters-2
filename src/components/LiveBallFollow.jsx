@@ -1,4 +1,11 @@
-export default function LiveBallFollow({ rounds = [], courses = [], scores = {}, players = [], activeRound }) {
+export default function LiveBallFollow({
+  rounds = [],
+  courses = [],
+  scores = {},
+  players = [],
+  activeRound,
+  getPlayerResult
+}) {
   const round = activeRound || rounds[0];
   if (!round) return null;
 
@@ -8,11 +15,24 @@ export default function LiveBallFollow({ rounds = [], courses = [], scores = {},
     : [{ id: "fallback", name: "Aktuell boll", players }];
 
   function playerProgress(player) {
-    const holes = scores?.[player]?.[round.slot]?.holeScores || [];
-    const played = holes.filter(h => h !== "" && Number(h) > 0).length;
-    const strokes = holes.reduce((sum, h) => h !== "" ? sum + Number(h) : sum, 0);
-    return { played, strokes };
+  const holes = scores?.[player]?.[round.slot]?.holeScores || []
+  const played = holes.filter(h => h !== "" && Number(h) > 0).length
+  const strokes = holes.reduce(
+    (sum, h) => h !== "" ? sum + Number(h) : sum,
+    0
+  )
+
+  const result = getPlayerResult
+    ? getPlayerResult(player, round)
+    : null
+
+  return {
+    played,
+    strokes,
+    points: result?.points || 0,
+    net: result?.net || 0
   }
+}
 const isLive = groups.some(group =>
   (group.players || []).some(player => {
     const played = playerProgress(player).played
@@ -54,9 +74,20 @@ const isLive = groups.some(group =>
         {player}
       </span>
 
-      <span className="playerScore">
-        {p.strokes || "-"} slag
-      </span>
+      <div className="playerScore livePlayerNumbers">
+  <strong>{p.strokes || "-"}</strong>
+  <span>slag</span>
+
+  <strong>{p.points || 0}</strong>
+  <span>p</span>
+
+  {p.played >= 18 && (
+    <>
+      <strong>{p.net || "-"}</strong>
+      <span>netto</span>
+    </>
+  )}
+</div>
     </div>
   );
 })}

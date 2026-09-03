@@ -863,8 +863,18 @@ function App() {
     scores={data.scores}
     players={data.players}
     activeRound={liveRound}
+    getPlayerResult={(player, round) =>
+      playerRoundResult(
+        player,
+        round,
+        data.courses,
+        data.scores,
+        data.playerHcp
+      )
+    }
   />
 )}
+
       {view === 'players' && <Players players={data.players} board={board} rounds={data.rounds} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} playerPhotos={data.playerPhotos} updateHcp={updateHcp} admin={admin} />}
       {view === 'stats' && <Stats board={board} rounds={data.rounds} players={data.players} courses={data.courses} scores={data.scores} playerHcp={data.playerHcp} />}
       {view === 'chat' && <Chat players={data.players} identity={identity} />}

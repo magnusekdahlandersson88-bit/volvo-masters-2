@@ -5028,3 +5028,42 @@ overflow: hidden;
     font-size: 11px !important;
   }
 }
+/* ===== Live – slag, poäng & netto ===== */
+
+.livePlayerNumbers {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.livePlayerNumbers strong {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.livePlayerNumbers span {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,.45);
+}
+
+.livePlayerNumbers strong:nth-of-type(2) {
+  color: #e8bd52;
+}
+
+@media (max-width: 700px) {
+  .livePlayerNumbers {
+    gap: 4px;
+  }
+
+  .livePlayerNumbers strong {
+    font-size: 14px;
+  }
+
+  .livePlayerNumbers span {
+    font-size: 9px;
+  }
+}
