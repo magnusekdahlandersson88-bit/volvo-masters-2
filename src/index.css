@@ -5067,3 +5067,48 @@ overflow: hidden;
     font-size: 9px;
   }
 }
+.adminHoleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.adminHoleRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: end;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.adminHoleRow strong {
+  align-self: center;
+  font-size: 0.9rem;
+}
+
+.adminHoleRow label {
+  margin: 0;
+}
+
+.adminHoleRow input {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .adminHoleGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .adminHoleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .adminHoleRow {
+    grid-template-columns: 70px 1fr 1fr;
+  }
+}

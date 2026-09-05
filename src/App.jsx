@@ -7,8 +7,7 @@ import {
   getDownloadURL,
   deleteObject
 } from 'firebase/storage'
-import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc ,query,
-orderBy,} from "firebase/firestore";
+import { getFirestore, doc, getDoc, onSnapshot, setDoc, collection, addDoc, query, orderBy } from "firebase/firestore";
 import './index.css'
 import LiveBallFollow from "./components/LiveBallFollow";
 import LiveActivityFeed from "./components/LiveActivityFeed";
@@ -135,6 +134,15 @@ function buildScores(players, rounds) {
   return Object.fromEntries(players.map(p => [p, Object.fromEntries(rounds.map(r => [r.slot, { hcp:'', holeScores:Array(18).fill('') }]))]))
 }
 
+function buildEmptyRounds(courses) {
+  return courses.map((course, index) => ({
+    slot: index + 1,
+    courseId: course.id,
+    date: '',
+    teeTimes: { 1:'', 2:'', 3:'' },
+    groups: null
+  }))
+}
 function calcPlayingHcp(hcp, slope=113, cr=72, par=72) {
   const n = parseFloat(String(hcp ?? '').replace(',', '.'))
   if (Number.isNaN(n)) return 0
@@ -162,6 +170,8 @@ function clone(value) {
 function useTournamentData() {
   const [state, setState] = useState({
     loading:true,
+    tournamentId: 'volvo-masters-2026',
+tournamentName: 'Volvo Masters 2026',
     players: DEFAULT_PLAYERS,
     courses: DEFAULT_COURSES,
     rounds: DEFAULT_ROUNDS,
@@ -182,6 +192,8 @@ function useTournamentData() {
       const rounds = data.rounds || DEFAULT_ROUNDS
       setState({
         loading:false,
+        tournamentId: data.tournamentId || 'volvo-masters-2026',
+tournamentName: data.tournamentName || 'Volvo Masters 2026',
         players,
         courses: data.courses || DEFAULT_COURSES,
         rounds,
@@ -196,9 +208,112 @@ function useTournamentData() {
   }, [])
 
   async function save(patch) {
-    setState(s => ({...s, ...patch}))
-    await setDoc(doc(db, 'tournament', 'data'), patch, { merge:true })
+  const tournamentMeta = {
+    tournamentId: state.tournamentId || 'volvo-masters-2026',
+    tournamentName: state.tournamentName || 'Volvo Masters 2026',
   }
+
+  setState(s => ({
+    ...s,
+    ...tournamentMeta,
+    ...patch
+  }))
+
+
+  await setDoc(
+    doc(db, 'tournament', 'data'),
+    {
+      ...tournamentMeta,
+      ...patch
+    },
+    { merge:true }
+  )
+}
+async function archiveCurrentTournament() {
+  const sourceRef = doc(db, 'tournament', 'data')
+  const sourceSnap = await getDoc(sourceRef)
+
+  if (!sourceSnap.exists()) {
+    throw new Error('Ingen aktiv turnering hittades att arkivera')
+  }
+
+  const sourceData = sourceSnap.data()
+
+  const archiveId =
+    sourceData.tournamentId ||
+    state.tournamentId ||
+    'volvo-masters-2026'
+
+  await setDoc(
+    doc(db, 'tournamentArchive', archiveId),
+    {
+      ...sourceData,
+      archivedAt: Date.now()
+    }
+  )
+}
+async function createNewTournament(tournamentId, tournamentName) {
+  if (!tournamentId || !tournamentName) {
+    throw new Error('Turnerings-ID och namn måste anges')
+  }
+
+  // 1. Arkivera nuvarande turnering först
+  await archiveCurrentTournament()
+
+const archiveRef = doc(
+  db,
+  'tournamentArchive',
+  state.tournamentId || 'volvo-masters-2026'
+)
+
+const archiveSnap = await getDoc(archiveRef)
+
+if (!archiveSnap.exists()) {
+  throw new Error(
+    'Arkiveringen kunde inte verifieras. Den aktiva turneringen har inte ändrats.'
+  )
+}
+
+  // 2. Behåll spelare och banor
+  const players = [...state.players]
+  const courses = clone(state.courses)
+
+  // 3. Starta den nya turneringen med en tom deltävling
+  const rounds = [
+    {
+      slot: 1,
+      courseId: courses[0]?.id || 1,
+      date: '',
+      teeTimes: { 1:'', 2:'', 3:'' },
+      groups: null
+    }
+  ]
+
+  // 4. Skapa helt tomma scorer
+  const scores = buildScores(players, rounds)
+
+  // 5. Skriv den nya aktiva turneringen
+  await setDoc(
+    doc(db, 'tournament', 'data'),
+    {
+      tournamentId,
+      tournamentName,
+      players,
+      courses,
+      rounds,
+      scores,
+
+      // Bra grunddata att behålla mellan år
+      playerHcp: { ...state.playerHcp },
+      playerPhotos: { ...state.playerPhotos },
+      heroImages: { ...state.heroImages },
+
+      // Ny turnering börjar tom här
+      gallery: {},
+      comments: {}
+    }
+  )
+}
   async function uploadMedia(file) {
   if (!file) return
 
@@ -325,6 +440,7 @@ function useTournamentData() {
   return {
   ...state,
   save,
+  archiveCurrentTournament,
   uploadMedia,
   deleteGalleryItem,
   uploadPlayerPhoto,
@@ -335,6 +451,7 @@ function useTournamentData() {
 function courseFor(courses, round) {
   return courses.find(c => c.id === round?.courseId) || courses[0] || DEFAULT_COURSES[0]
 }
+
 
 function playerRoundResult(player, round, courses, scores, playerHcp) {
   const course = courseFor(courses, round)
@@ -897,6 +1014,8 @@ function App() {
           heroImages={data.heroImages}
           uploadHeroImage={uploadHeroImage}
           save={data.save}
+          createNewTournament={data.createNewTournament}
+          archiveCurrentTournament={data.archiveCurrentTournament}
           updateRoundGroups={updateRoundGroups}
           enableNotifications={enableNotificationsForCurrentDevice}
           notificationsEnabled={notificationsEnabled}
@@ -2652,12 +2771,90 @@ const hardest = Object.values(
 }
 
 
-function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, uploadPlayerPhoto, heroImages = {}, uploadHeroImage, save, updateRoundGroups, enableNotifications, notificationsEnabled }) {
+function AdminPanel({
+  players,
+  rounds,
+  courses,
+  playerHcp,
+  playerPhotos = {},
+  uploadPlayerPhoto,
+  heroImages = {},
+  uploadHeroImage,
+  save,
+  updateRoundGroups,
+  enableNotifications,
+  notificationsEnabled,
+  createNewTournament,
+  archiveCurrentTournament
+}) {
   const [tab, setTab] = useState('overview')
   const [newPlayer, setNewPlayer] = useState('')
   const [status, setStatus] = useState('')
   const [roundDrafts, setRoundDrafts] = useState(() => clone(rounds))
   const [courseDrafts, setCourseDrafts] = useState(() => clone(courses))
+  const [newTournamentName, setNewTournamentName] = useState('Volvo Masters 2027')
+  const [creatingTournament, setCreatingTournament] = useState(false)
+  async function handleCreateTournament()
+   {
+  const name = newTournamentName.trim()
+
+  if (!name) {
+    alert('Skriv ett namn på den nya turneringen.')
+    return
+  }
+
+  const ok = window.confirm(
+    `Skapa "${name}"?\n\nNuvarande turnering arkiveras först. Fortsätt bara när den är helt avslutad.`
+  )
+
+  if (!ok) return
+
+  const tournamentId = name
+    .toLowerCase()
+    .trim()
+    .replace(/å/g, 'a')
+    .replace(/ä/g, 'a')
+    .replace(/ö/g, 'o')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  if (!tournamentId) {
+    alert('Kunde inte skapa ett giltigt turnerings-ID.')
+    return
+  }
+
+  try {
+    setCreatingTournament(true)
+    setStatus('Skapar ny turnering…')
+
+    await createNewTournament(tournamentId, name)
+
+    setStatus(`${name} är skapad.`)
+    alert(`${name} är skapad och den tidigare turneringen är arkiverad.`)
+  } catch (error) {
+    console.error(error)
+    setStatus('Kunde inte skapa ny turnering.')
+    alert(
+      `Ny turnering skapades inte.\n\n${error?.message || 'Okänt fel'}`
+    )
+  } finally {
+    setCreatingTournament(false)
+  }
+}
+async function handleTestArchive() {
+  try {
+    setStatus('Testar arkivering…')
+
+    await archiveCurrentTournament()
+
+    setStatus('Arkiveringstest lyckades.')
+    alert('2026 har kopierats till arkivet. Den aktiva turneringen är oförändrad.')
+  } catch (error) {
+    console.error(error)
+    setStatus('Arkiveringstest misslyckades.')
+    alert(error?.message || 'Arkiveringen misslyckades.')
+  }
+}
 
   useEffect(() => setRoundDrafts(clone(rounds)), [rounds])
   useEffect(() => setCourseDrafts(clone(courses)), [courses])
@@ -2694,6 +2891,47 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
   function updateRound(slot, patch) {
     setRoundDrafts(list => list.map(r => r.slot === slot ? {...r, ...patch} : r))
   }
+  function addRound() {
+  setRoundDrafts(current => {
+    const nextSlot = current.length
+      ? Math.max(...current.map(r => Number(r.slot) || 0)) + 1
+      : 1
+
+    const firstCourseId = courses[0]?.id || 1
+
+    return [
+      ...current,
+      {
+        slot: nextSlot,
+        courseId: firstCourseId,
+        date: '',
+        teeTimes: { 1:'', 2:'', 3:'' },
+        groups: null
+      }
+    ]
+  })
+}
+function removeRound(slot) {
+  setRoundDrafts(current => {
+    if (current.length <= 1) {
+      alert('Turneringen måste ha minst en deltävling.')
+      return current
+    }
+
+    const ok = window.confirm(
+      `Ta bort deltävling ${slot}? Detta påverkar bara utkastet tills du trycker Spara alla.`
+    )
+
+    if (!ok) return current
+
+    return current
+      .filter(r => r.slot !== slot)
+      .map((r, index) => ({
+        ...r,
+        slot: index + 1
+      }))
+  })
+}
 
   async function saveRounds() {
     await flash('Rundorna är sparade.', () => save({rounds:roundDrafts}))
@@ -2702,112 +2940,40 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
   function updateCourse(id, patch) {
     setCourseDrafts(list => list.map(c => c.id === id ? {...c, ...patch} : c))
   }
+  function addCourse() {
+  const nextId = courseDrafts.length
+    ? Math.max(...courseDrafts.map(c => Number(c.id) || 0)) + 1
+    : 1
 
-  async function saveCourses() {
-  const courseHoleData = {
-    breviken: {
-      par: [
-        4,5,3,4,3,5,4,4,4,
-        4,4,4,4,3,5,3,4,5
-      ],
-      si: [
-        5,7,15,11,13,3,17,1,9,
-        14,12,4,10,18,2,16,6,8
-      ],
-      emoji: '🌳'
-    },
-
-    billingen: {
-      par: [
-        4,3,4,3,5,3,4,4,4,
-        3,4,5,4,3,4,4,4,5
-      ],
-      si: [
-        14,8,12,16,4,18,2,10,6,
-        15,13,5,1,9,17,3,7,11
-      ],
-      emoji: '⛰️'
-    },
-
-    knistad: {
-      par: [
-        5,4,4,3,4,4,5,4,3,
-        4,4,5,3,4,4,4,3,5
-      ],
-      si: [
-        5,9,13,17,3,11,1,7,15,
-        10,14,4,16,8,2,6,18,12
-      ],
-      emoji: '🏡'
-    },
-
-    skovde: {
-      par: [
-        4,4,5,3,4,3,5,4,4,
-        5,3,4,5,3,4,4,3,5
-      ],
-      si: [
-        9,13,3,15,1,5,11,17,7,
-        2,8,4,16,10,18,14,6,12
-      ],
-      emoji: '🌿'
-    },
-
-    mariestad: {
-      par: [
-        4,5,4,3,4,3,4,4,5,
-        4,4,4,5,3,4,3,5,5
-      ],
-      si: [
-        11,7,5,17,3,15,1,13,9,
-        10,18,14,6,16,2,4,8,12
-      ],
-      emoji: '🌊'
-    },
-
-    lacko: {
-      par: [
-        5,4,3,5,4,3,4,4,3,
-        5,4,4,3,4,4,5,4,4
-      ],
-      si: [
-        5,17,15,1,3,13,9,7,11,
-        16,18,6,14,8,2,4,10,12
-      ],
-      emoji: '🏰'
-    }
-  }
-
-  const nextCourses = courseDrafts.map(course => {
-    const name = String(course.name || '').toLowerCase()
-
-    let data = null
-
-    if (name.includes('breviken')) data = courseHoleData.breviken
-    if (name.includes('billingen')) data = courseHoleData.billingen
-    if (name.includes('knistad')) data = courseHoleData.knistad
-
-    if (name.includes('skövde') || name.includes('skovde')) {
-      data = courseHoleData.skovde
-    }
-
-    if (name.includes('mariestad')) data = courseHoleData.mariestad
-
-    if (name.includes('läckö') || name.includes('lacko')) {
-      data = courseHoleData.lacko
-    }
-
-    if (!data) return course
-
-    return {
-      ...course,
-      emoji: data.emoji,
-      holes: data.par.map((par, index) => ({
-        par,
-        si: data.si[index]
+  setCourseDrafts(current => [
+    ...current,
+    {
+      id: nextId,
+      name: 'Ny bana',
+      tee: '',
+      location: '',
+      par: 72,
+      cr: '',
+      slope: '',
+      emoji: '⛳',
+      holes: Array.from({ length: 18 }, (_, index) => ({
+        par: 4,
+        si: index + 1
       }))
     }
-  })
+  ])
+}
+  async function saveCourses() {
+  const nextCourses = courseDrafts.map(course => ({
+    ...course,
+    par: Number(course.par) || 72,
+    cr: course.cr === '' ? '' : Number(course.cr),
+    slope: Number(course.slope) || 113,
+    holes: (course.holes || []).map(hole => ({
+      par: Number(hole.par) || 4,
+      si: Number(hole.si) || 1
+    }))
+  }))
 
   await flash(
     'Banorna är sparade.',
@@ -2815,7 +2981,9 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
   )
 }
 
-  const tabs = [['overview','Översikt'],['players','Spelare'],['rounds','Deltävlingar'],['groups','Bollar'],['courses','Banor'],['heroes','Hero-bilder'],['notifications','Notiser']]
+    
+
+  const tabs = [['overview','Översikt'],['tournament','🏆 Turnering'],['players','Spelare'],['rounds','Deltävlingar'],['groups','Bollar'],['courses','Banor'],['heroes','Hero-bilder'],['notifications','Notiser']]
   return <section className="adminPage">
     <div className="adminHero">
       <div><small>VOLVO MASTERS CONTROL CENTER</small><h2>Adminpanel</h2><p>Ändringar sparas direkt i Firebase och syns för alla.</p></div>
@@ -2831,6 +2999,50 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
       <div className="adminMetric"><span>🔔</span><strong>{notificationsEnabled?'På':'Av'}</strong><small>Notiser på denna enhet</small></div>
       <div className="panel adminWelcome"><h3>Snabbstart inför tävlingen</h3><ol><li>Kontrollera datum och bana under Deltävlingar.</li><li>Ordna spelarna under Bollar.</li><li>Kontrollera HCP under Spelare.</li><li>Öppna Score och välj markör.</li></ol></div>
     </div>}
+    {tab==='tournament' && (
+  <div className="panel adminSection">
+    <div className="adminSectionHead">
+      <div>
+        <h3>🏆 Turnering</h3>
+        <p>Hantera nuvarande turnering och skapa nästa års Volvo Masters.</p>
+      </div>
+    </div>
+
+    <div className="adminWelcome">
+      <h3>Skapa ny turnering</h3>
+      <label>
+  Namn på ny turnering
+  <input
+    value={newTournamentName}
+    onChange={e => setNewTournamentName(e.target.value)}
+    placeholder="Volvo Masters 2027"
+  />
+</label>
+      <p>
+        När en ny turnering skapas kommer den nuvarande först att
+        arkiveras. Resultat och statistik från den gamla turneringen
+        ska finnas kvar i historiken.
+      </p>
+
+      <div className="adminActions">
+  <button
+    type="button"
+    onClick={handleCreateTournament}
+    disabled={creatingTournament}
+  >
+    {creatingTournament ? 'Skapar turnering…' : 'Skapa ny turnering'}
+  </button>
+  <button
+  type="button"
+  className="ghost"
+  onClick={handleTestArchive}
+>
+  Testa arkivering
+</button>
+</div>
+    </div>
+  </div>
+)}
 
     {tab==='players' && <div className="panel adminSection">
       <div className="adminSectionHead"><div><h3>Hantera spelare</h3><p>Lägg till, byt namn, ta bort och ändra HCP.</p></div><div className="adminInline"><input value={newPlayer} onChange={e=>setNewPlayer(e.target.value)} placeholder="Nytt spelarnamn"/><button onClick={addPlayer}>Lägg till</button></div></div>
@@ -2848,8 +3060,25 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
     </div>}
 
     {tab==='rounds' && <div className="panel adminSection">
-      <div className="adminSectionHead"><div><h3>Deltävlingar</h3><p>Ändra datum och bana.</p></div><button onClick={saveRounds}>Spara alla</button></div>
-      <div className="adminRoundGrid">{roundDrafts.map(r => <div className="adminRoundCard" key={r.slot}><b>Deltävling {r.slot}</b><label>Datum<input value={r.date||''} onChange={e=>updateRound(r.slot,{date:e.target.value})}/></label><label>Bana<select value={r.courseId} onChange={e=>updateRound(r.slot,{courseId:Number(e.target.value)})}>{courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>)}</div>
+      <div className="adminSectionHead">
+  <div>
+    <h3>Deltävlingar</h3>
+    <p>Lägg till, ta bort och ändra datum eller bana.</p>
+  </div>
+
+  <div className="adminInline">
+    <button onClick={addRound}>Lägg till deltävling</button>
+    <button onClick={saveRounds}>Spara alla</button>
+  </div>
+</div>
+
+      <div className="adminRoundGrid">{roundDrafts.map(r => <div className="adminRoundCard" key={r.slot}><button
+  type="button"
+  className="ghost"
+  onClick={() => removeRound(r.slot)}
+>
+  Ta bort
+</button><b>Deltävling {r.slot}</b><label>Datum<input value={r.date||''} onChange={e=>updateRound(r.slot,{date:e.target.value})}/></label><label>Bana<select value={r.courseId} onChange={e=>updateRound(r.slot,{courseId:Number(e.target.value)})}>{courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div>)}</div>
     </div>}
 
     {tab==='groups' && <div className="panel adminSection">
@@ -2858,20 +3087,111 @@ function AdminPanel({ players, rounds, courses, playerHcp, playerPhotos = {}, up
     </div>}
 
     {tab==='courses' && <div className="panel adminSection">
-      <div className="adminSectionHead"><div><h3>Banor</h3><p>Uppdatera tee, slope, CR och par.</p></div><button onClick={saveCourses}>Spara banor</button></div>
-      <div className="adminCourseGrid">{courseDrafts.map(c => <div className="adminCourseCard" key={c.id}><h4>{c.name}</h4><label>Namn<input value={c.name} onChange={e=>updateCourse(c.id,{name:e.target.value})}/></label><div className="adminFieldGrid"><label>Tee<input value={c.tee||''} onChange={e=>updateCourse(c.id,{tee:e.target.value})}/></label><label>Par<input inputMode="numeric" value={c.par||''} onChange={e=>updateCourse(c.id,{par:Number(e.target.value)||''})}/></label><label>
-  CR
-  <input
-    inputMode="decimal"
-    value={c.cr ?? ''}
-    onChange={e =>
-      updateCourse(c.id, {
-        cr: e.target.value.replace(',', '.')
-      })
-    }
-  />
-</label><label>Slope<input inputMode="numeric" value={c.slope||''} onChange={e=>updateCourse(c.id,{slope:Number(e.target.value)||''})}/></label></div></div>)}</div>
-    </div>}
+  <div className="adminSectionHead">
+    <div>
+      <h3>Banor</h3>
+      <p>Lägg till och uppdatera banor, tee, slope, CR, par och håldata.</p>
+    </div>
+
+    <div className="adminInline">
+      <button onClick={addCourse}>Lägg till bana</button>
+      <button onClick={saveCourses}>Spara banor</button>
+    </div>
+  </div>
+
+  <div className="adminCourseGrid">
+    {courseDrafts.map(c => (
+      <div className="adminCourseCard" key={c.id}>
+        <h4>{c.name}</h4>
+
+        <label>
+          Namn
+          <input
+            value={c.name}
+            onChange={e=>updateCourse(c.id,{name:e.target.value})}
+          />
+        </label>
+
+        <div className="adminFieldGrid">
+          <label>
+            Tee
+            <input
+              value={c.tee||''}
+              onChange={e=>updateCourse(c.id,{tee:e.target.value})}
+            />
+          </label>
+
+          <label>
+            Par
+            <input
+              inputMode="numeric"
+              value={c.par||''}
+              onChange={e=>updateCourse(c.id,{par:Number(e.target.value)||''})}
+            />
+          </label>
+
+          <label>
+            CR
+            <input
+              inputMode="decimal"
+              value={c.cr ?? ''}
+              onChange={e=>updateCourse(c.id,{cr:e.target.value.replace(',', '.')})}
+            />
+          </label>
+
+          <label>
+            Slope
+            <input
+              inputMode="numeric"
+              value={c.slope||''}
+              onChange={e=>updateCourse(c.id,{slope:Number(e.target.value)||''})}
+            />
+          </label>
+        </div>
+
+        <div className="adminHoleGrid">
+          {(c.holes || []).map((hole, index) => (
+            <div className="adminHoleRow" key={index}>
+              <strong>Hål {index + 1}</strong>
+
+              <label>
+                Par
+                <input
+                  inputMode="numeric"
+                  value={hole.par ?? ''}
+                  onChange={e => {
+                    const holes = [...(c.holes || [])]
+                    holes[index] = {
+                      ...holes[index],
+                      par: Number(e.target.value) || ''
+                    }
+                    updateCourse(c.id, { holes })
+                  }}
+                />
+              </label>
+
+              <label>
+                SI
+                <input
+                  inputMode="numeric"
+                  value={hole.si ?? ''}
+                  onChange={e => {
+                    const holes = [...(c.holes || [])]
+                    holes[index] = {
+                      ...holes[index],
+                      si: Number(e.target.value) || ''
+                    }
+                    updateCourse(c.id, { holes })
+                  }}
+                />
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>}
 
     {tab==='heroes' && (
       <HeroImageAdmin
